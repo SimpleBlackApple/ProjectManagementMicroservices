@@ -1,0 +1,42 @@
+spring:
+    application:
+        name: ProjectApplication
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/pm_assistant
+        username: ${postgresql.user:postgres}
+        password: ${postgresql.password:123456}
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+    port: 8082
+
+dubbo:
+    application:
+        name: ${spring.application.name}
+        qos-enable: false
+    registry:
+        address: multicast://224.5.6.7:1234
+    protocol:
+        name: dubbo
+        port: 20891
+
+seata:
+    enabled: true
+    application-id: dubbo-samples-seata
+    tx-service-group: default_tx_group
+    service:
+        vgroup-mapping:
+            default_tx_group: default
+        grouplist:
+            default: ${seata.address:127.0.0.1}:${seata.port:8091}
+    registry:
+        type: file
+    config:
+        type: file 
