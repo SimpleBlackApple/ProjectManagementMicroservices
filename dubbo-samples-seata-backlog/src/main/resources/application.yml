@@ -1,0 +1,28 @@
+server:
+    port: 8083
+spring:
+    application:
+        name: BacklogApplication
+dubbo:
+    application:
+        logger: slf4j
+        name: ${spring.application.name}
+        qos-enable: false
+    registry:
+        address: multicast://224.5.6.7:1234
+    protocol:
+        name: dubbo
+        port: 20893
+seata:
+    enabled: true
+    application-id: dubbo-samples-seata
+    tx-service-group: default_tx_group
+    service:
+        vgroup-mapping:
+            default_tx_group: default
+        grouplist:
+            default: ${seata.address:127.0.0.1}:${seata.port:8091}
+    registry:
+        type: file
+    config:
+        type: file 
