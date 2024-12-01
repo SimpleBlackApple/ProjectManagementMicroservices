@@ -14,7 +14,8 @@
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <dubbo.version>3.2.0</dubbo.version>
+        <dubbo.version>3.3.0</dubbo.version>
+        <nacos.version>2.2.3</nacos.version>
         <seata.version>1.7.0</seata.version>
     </properties>
 
@@ -35,6 +36,21 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-spring-boot-starter</artifactId>
             <version>${dubbo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>  <!-- 建议使用与您的 Dubbo 版本兼容的版本 -->
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-common</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-api</artifactId>
+            <version>${nacos.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.seata</groupId>
