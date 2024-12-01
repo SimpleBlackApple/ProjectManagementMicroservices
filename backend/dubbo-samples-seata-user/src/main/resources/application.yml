@@ -49,9 +49,14 @@ seata:
     service:
         vgroup-mapping:
             default_tx_group: default
-        grouplist:
-            default: ${seata.address:127.0.0.1}:${seata.port:8091}
     registry:
-        type: file
+        type: nacos
+        nacos:
+            application: seata-server
+            server-addr: 127.0.0.1:8848
+            group: SEATA_GROUP
+            namespace: ""
+            username: ""
+            password: ""
     config:
         type: file
