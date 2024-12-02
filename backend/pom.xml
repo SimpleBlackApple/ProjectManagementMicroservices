@@ -26,13 +26,14 @@
     <description>dubbo samples seata</description>
     <properties>
         <skipTests>true</skipTests>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <dubbo.version>3.3.0</dubbo.version>
         <spring-boot.version>2.7.10</spring-boot.version>
         <lombok.version>1.18.30</lombok.version>
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
     <repositories>
         <repository>
