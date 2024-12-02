@@ -30,4 +30,10 @@ seata:
             username: ""
             password: ""
     config:
-        type: file
+        type: nacos
+        nacos:
+            server-addr: 127.0.0.1:8848
+            group: SEATA_GROUP
+            namespace: ""
+            username: ""
+            password: ""
