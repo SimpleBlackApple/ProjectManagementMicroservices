@@ -1,4 +1,7 @@
 store.mode=db
+store.lock.mode=db
+store.session.mode=db
+
 store.db.datasource=druid
 store.db.dbType=postgresql
 store.db.driverClassName=org.postgresql.Driver
