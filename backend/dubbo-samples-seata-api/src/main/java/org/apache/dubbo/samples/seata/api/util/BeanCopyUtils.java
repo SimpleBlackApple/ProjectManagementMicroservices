@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.project.util;
+package org.apache.dubbo.samples.seata.api.util;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class BeanCopyUtils {
-    
+
     /**
      * 获取所有为null的属性名
      */
@@ -34,4 +34,4 @@ public class BeanCopyUtils {
     public static void copyNonNullProperties(Object src, Object target) {
         BeanUtils.copyProperties(src, target, getNullPropertyNames(src));
     }
-} 
+}

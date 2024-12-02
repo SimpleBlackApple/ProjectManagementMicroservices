@@ -10,7 +10,7 @@ import org.apache.dubbo.samples.seata.project.entity.Member;
 import org.apache.dubbo.samples.seata.project.repository.ProjectRepository;
 import org.apache.dubbo.samples.seata.project.repository.SprintRepository;
 import org.apache.dubbo.samples.seata.project.repository.TaskRepository;
-import org.apache.dubbo.samples.seata.project.util.BeanCopyUtils;
+import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 

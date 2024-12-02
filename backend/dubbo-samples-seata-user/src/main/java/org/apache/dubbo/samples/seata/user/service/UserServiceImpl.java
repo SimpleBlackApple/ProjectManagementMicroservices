@@ -8,6 +8,9 @@ import org.apache.dubbo.samples.seata.user.repository.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
+import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
+
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +50,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(Integer userId, UserUpdateBody userUpdateBody) {
         return userRepository.findById(userId)
                 .map(user -> {
-                    BeanUtils.copyProperties(userUpdateBody, user, "userId");
+                    BeanCopyUtils.copyNonNullProperties(userUpdateBody, user);
                     return convertToDTO(userRepository.save(user));
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));
