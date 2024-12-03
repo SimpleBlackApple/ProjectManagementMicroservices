@@ -7,8 +7,8 @@
         <artifactId>dubbo-samples-seata</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>dubbo-samples-seata-backlog</artifactId>
-    <name>dubbo-samples-seata-backlog</name>
+    <artifactId>dubbo-samples-seata-task</artifactId>
+    <name>dubbo-samples-seata-task</name>
 
     <properties>
         <java.version>21</java.version>
@@ -72,7 +72,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.apache.dubbo.samples.seata.backlog.BacklogApplication</mainClass>
+                    <mainClass>org.apache.dubbo.samples.seata.task.TaskApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>

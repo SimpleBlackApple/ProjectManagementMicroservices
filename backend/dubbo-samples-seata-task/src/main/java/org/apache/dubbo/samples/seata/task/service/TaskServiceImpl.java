@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.backlog.service;
+package org.apache.dubbo.samples.seata.task.service;
 
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.samples.seata.api.ProjectService;
@@ -10,7 +10,7 @@ import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BacklogServiceImpl implements BacklogService {
+public class TaskServiceImpl implements TaskService {
     
     @DubboReference(check = false)
     private ProjectService projectService;

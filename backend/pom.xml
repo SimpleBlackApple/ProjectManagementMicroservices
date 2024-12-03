@@ -70,7 +70,7 @@
         <module>dubbo-samples-seata-business</module>
         <module>dubbo-samples-seata-user</module>
         <module>dubbo-samples-seata-project</module>
-        <module>dubbo-samples-seata-backlog</module>
+        <module>dubbo-samples-seata-task</module>
     </modules>
 
     <dependencyManagement>
@@ -126,7 +126,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
-                <artifactId>dubbo-samples-seata-backlog</artifactId>
+                <artifactId>dubbo-samples-seata-task</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
