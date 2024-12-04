@@ -3,7 +3,6 @@ package org.apache.dubbo.samples.seata.project.entity;
 import lombok.Data;
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
 @Entity
@@ -15,21 +14,9 @@ public class Project {
     
     private String name;
     private String description;
-    private Integer ownerId;
-    private LocalDateTime createdAt;
     private String status;
+    private LocalDateTime createdAt;
     
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
-    private Set<Sprint> sprints;
-    
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
-    private Set<Task> tasks;
-    
-    @ManyToMany
-    @JoinTable(
-        name = "project_members",
-        joinColumns = @JoinColumn(name = "project_id"),
-        inverseJoinColumns = @JoinColumn(name = "member_id")
-    )
-    private Set<Member> members;
+    @Column(name = "owner_id")
+    private Integer ownerId;
 }

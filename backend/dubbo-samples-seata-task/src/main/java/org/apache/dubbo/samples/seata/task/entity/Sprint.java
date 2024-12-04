@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.project.entity;
+package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.Data;
 import javax.persistence.*;
@@ -13,9 +13,8 @@ public class Sprint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
+    @Column(name = "project_id", nullable = false)
+    private Integer projectId;
     
     private String name;
     private LocalDateTime startDate;
@@ -24,6 +23,9 @@ public class Sprint {
     
     @OneToMany(mappedBy = "sprint")
     private Set<Task> tasks;
+    
+    @ManyToMany(mappedBy = "sprints")
+    private Set<Member> members;
     
     @Transient
     public Integer getTotalStoryPoints() {

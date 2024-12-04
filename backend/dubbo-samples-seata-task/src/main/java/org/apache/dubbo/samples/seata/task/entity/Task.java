@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.project.entity;
+package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.Data;
 import javax.persistence.*;
@@ -21,11 +21,13 @@ public class Task {
     private LocalDateTime updatedAt;
     private LocalDateTime dueDate;
     
-    @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
+    @Column(name = "project_id", nullable = false)
+    private Integer projectId;
     
     @ManyToOne
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
+    
+    @OneToOne(mappedBy = "assignedTask")
+    private Member assignedMember;
 } 
