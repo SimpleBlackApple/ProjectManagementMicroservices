@@ -4,9 +4,12 @@ import org.apache.dubbo.samples.seata.api.dto.*;
 import java.util.List;
 
 public interface ProjectService {
-    ProjectDTO getProjectById(Integer projectId);
-    List<ProjectDTO> getAllProjects();
-    ProjectDTO createProject(ProjectCreateBody createBody);
-    ProjectDTO updateProject(Integer userId, Integer projectId, ProjectUpdateBody updateBody);
-    void deleteProject(Integer projectId);
+    List<ProjectDTO> getProjectByOwnerId(Integer ownerId);
+    List<ProjectDTO> getAllProjects(Integer memberId);
+    ProjectDTO createProject(Integer ownerId, ProjectCreateBody createBody);
+    ProjectDTO updateProject(Integer memberId, Integer projectId, ProjectUpdateBody updateBody);
+    void deleteProject(Integer memberId, Integer projectId);
+    ProjectDTO addMember(Integer ownerId, Integer projectId, Integer newUserId);
+    void removeMember(Integer ownerId, Integer projectId, Integer memberId);
+    List<MemberDTO> getProjectMembers(Integer projectId);
 } 

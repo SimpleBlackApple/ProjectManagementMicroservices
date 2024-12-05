@@ -16,33 +16,64 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
-    @GetMapping("/{projectId}")
-    public ProjectDTO getProject(@PathVariable Integer projectId) {
-        return projectService.getProjectById(projectId);
+    @GetMapping("/member/{memberId}")
+    public List<ProjectDTO> getProject(@PathVariable Integer memberId) {
+        // 获取该成员作为owner的所有项目
+        return projectService.getProjectByOwnerId(memberId);
     }
 
-    @GetMapping
-    public List<ProjectDTO> getAllProjects() {
-        return projectService.getAllProjects();
+    @GetMapping("/all/{memberId}")
+    public List<ProjectDTO> getAllProjects(@PathVariable Integer memberId) {
+        // 获取该成员参与的所有项目（包括作为owner和普通成员的）
+        return projectService.getAllProjects(memberId);
     }
 
-    @PostMapping
-    public ProjectDTO createProject(@RequestBody ProjectCreateBody createBody) {
-        return projectService.createProject(createBody);
+    @PostMapping("/{ownerId}")
+    public ProjectDTO createProject(
+        @PathVariable Integer ownerId,
+        @RequestBody ProjectCreateBody createBody
+    ) {
+        return projectService.createProject(ownerId, createBody);
     }
 
-    @PutMapping("/{userId}/{projectId}")
+    @PutMapping("/{memberId}/{projectId}")
     public ProjectDTO updateProject(
-        @PathVariable Integer userId,
-        @PathVariable Integer projectId, 
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
         @RequestBody ProjectUpdateBody updateBody
     ) {
-        return projectService.updateProject(userId, projectId, updateBody);
+        return projectService.updateProject(memberId, projectId, updateBody);
     }
 
-    @DeleteMapping("/{projectId}")
-    public void deleteProject(@PathVariable Integer projectId) {
-        projectService.deleteProject(projectId);
+    @DeleteMapping("/{memberId}/{projectId}")
+    public void deleteProject(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId
+    ) {
+        projectService.deleteProject(memberId, projectId);
+    }
+
+    @PostMapping("/{ownerId}/{projectId}/members/{newUserId}")
+    public ProjectDTO addMember(
+        @PathVariable Integer ownerId,
+        @PathVariable Integer projectId,
+        @PathVariable Integer newUserId
+    ) {
+        return projectService.addMember(ownerId, projectId, newUserId);
+    }
+
+    @DeleteMapping("/{ownerId}/{projectId}/members/{memberId}")
+    public void removeMember(
+        @PathVariable Integer ownerId,
+        @PathVariable Integer projectId,
+        @PathVariable Integer memberId
+    ) {
+        projectService.removeMember(ownerId, projectId, memberId);
+    }
+
+    @GetMapping("/{projectId}/members")
+    public List<MemberDTO> getProjectMembers(@PathVariable Integer projectId) {
+        return projectService.getProjectMembers(projectId);
     }
 
 } 
