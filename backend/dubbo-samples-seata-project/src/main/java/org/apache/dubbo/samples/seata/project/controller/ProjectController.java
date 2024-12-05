@@ -1,6 +1,5 @@
 package org.apache.dubbo.samples.seata.project.controller;
 
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.samples.seata.api.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.springframework.web.bind.annotation.*;
@@ -10,9 +9,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
-    
-    @DubboReference(check = false)
-    private ProjectService projectService;
+
+    private final ProjectService projectService;
+
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
+    }
 
     @GetMapping("/{projectId}")
     public ProjectDTO getProject(@PathVariable Integer projectId) {
@@ -29,13 +31,18 @@ public class ProjectController {
         return projectService.createProject(createBody);
     }
 
-    @PutMapping("/{projectId}")
-    public ProjectDTO updateProject(@PathVariable Integer projectId, @RequestBody ProjectUpdateBody updateBody) {
-        return projectService.updateProject(projectId, updateBody);
+    @PutMapping("/{userId}/{projectId}")
+    public ProjectDTO updateProject(
+        @PathVariable Integer userId,
+        @PathVariable Integer projectId, 
+        @RequestBody ProjectUpdateBody updateBody
+    ) {
+        return projectService.updateProject(userId, projectId, updateBody);
     }
 
     @DeleteMapping("/{projectId}")
     public void deleteProject(@PathVariable Integer projectId) {
         projectService.deleteProject(projectId);
     }
-}
+
+} 

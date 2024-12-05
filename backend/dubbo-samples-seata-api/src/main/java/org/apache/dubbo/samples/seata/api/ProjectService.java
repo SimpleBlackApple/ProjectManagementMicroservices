@@ -7,6 +7,6 @@ public interface ProjectService {
     ProjectDTO getProjectById(Integer projectId);
     List<ProjectDTO> getAllProjects();
     ProjectDTO createProject(ProjectCreateBody createBody);
-    ProjectDTO updateProject(Integer projectId, ProjectUpdateBody updateBody);
+    ProjectDTO updateProject(Integer userId, Integer projectId, ProjectUpdateBody updateBody);
     void deleteProject(Integer projectId);
 } 

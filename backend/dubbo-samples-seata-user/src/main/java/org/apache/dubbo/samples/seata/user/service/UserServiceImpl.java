@@ -9,13 +9,14 @@ import org.springframework.beans.BeanUtils;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
-
+import org.springframework.stereotype.Service;
 
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @DubboService
+@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

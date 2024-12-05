@@ -10,6 +10,7 @@ import org.apache.dubbo.samples.seata.project.repository.ProjectRepository;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @DubboService
+@Service
 public class ProjectServiceImpl implements ProjectService {
 
     @Resource
@@ -42,18 +44,31 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @GlobalTransactional
-    public ProjectDTO updateProject(Integer projectId, ProjectUpdateBody updateBody) {
+    public ProjectDTO updateProject(Integer userId, Integer projectId, ProjectUpdateBody updateBody) {
+        // 1. 验证项目是否存在
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
-            
-        // 验证用户是否存在
-        UserDTO user = userService.getUserById(updateBody.getOwnerId());
         
-        // 验证更新权限
-        if (!project.getOwnerId().equals(user.getUserId())) {
+        // 2. 验证当前用户是否存在
+        UserDTO currentUser = userService.getUserById(userId);
+        if (currentUser == null) {
+            throw new RuntimeException("Current user not found");
+        }
+        
+        // 3. 如果更新请求包含新的 ownerId，验证新 owner 是否存在
+        if (updateBody.getOwnerId() != null) {
+            UserDTO newOwner = userService.getUserById(updateBody.getOwnerId());
+            if (newOwner == null) {
+                throw new RuntimeException("New owner not found");
+            }
+        }
+        
+        // 4. 验证当前用户是否有权限更新项目（必须是项目的当前所有者）
+        if (!project.getOwnerId().equals(userId)) {
             throw new RuntimeException("Only project owner can update the project");
         }
 
+        // 5. 更新项目
         BeanCopyUtils.copyNonNullProperties(updateBody, project);
         return convertToProjectDTO(projectRepository.save(project));
     }
