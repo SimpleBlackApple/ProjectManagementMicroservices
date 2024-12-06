@@ -17,15 +17,23 @@ public class ProjectController {
     }
 
     @GetMapping("/member/{memberId}")
-    public List<ProjectDTO> getProject(@PathVariable Integer memberId) {
+    public List<ProjectDTO> getProjectByMember(@PathVariable Integer memberId) {
         // 获取该成员作为owner的所有项目
         return projectService.getProjectByOwnerId(memberId);
     }
 
-    @GetMapping("/all/{memberId}")
-    public List<ProjectDTO> getAllProjects(@PathVariable Integer memberId) {
+    @GetMapping()
+    public List<ProjectDTO> getAllProjects() {
         // 获取该成员参与的所有项目（包括作为owner和普通成员的）
-        return projectService.getAllProjects(memberId);
+        return projectService.getAllProjects();
+    }
+
+    @GetMapping("/{ownerId}/{projectId}")
+    public ProjectDTO getProject(
+            @PathVariable Integer ownerId,
+            @PathVariable Integer projectId
+    ) {
+        return projectService.getProject(ownerId, projectId);
     }
 
     @PostMapping("/{ownerId}")
@@ -75,5 +83,4 @@ public class ProjectController {
     public List<MemberDTO> getProjectMembers(@PathVariable Integer projectId) {
         return projectService.getProjectMembers(projectId);
     }
-
 } 

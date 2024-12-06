@@ -96,7 +96,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectDTO> getAllProjects(Integer memberId) {
+    public List<ProjectDTO> getAllProjects() {
         // 直接返回所有项目
         return projectRepository.findAll()
                 .stream()
@@ -153,6 +153,19 @@ public class ProjectServiceImpl implements ProjectService {
                 return dto;
             })
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProjectDTO getProject(Integer ownerId, Integer projectId) {
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new RuntimeException("Project not found"));
+        
+        // 验证用户是否是项目所有者
+        if (!project.getOwnerId().equals(ownerId)) {
+            throw new RuntimeException("Access denied: user is not the owner of this project");
+        }
+        
+        return convertToProjectDTO(project);
     }
 
     private ProjectDTO convertToProjectDTO(Project project) {
