@@ -14,8 +14,8 @@ import java.util.HashSet;
 @Setter
 @Entity
 @Table(name = "projects")
-@ToString(exclude = "members")
-@EqualsAndHashCode(exclude = "members")
+@ToString(exclude = "projectMembers")
+@EqualsAndHashCode(exclude = "projectMembers")
 public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +27,18 @@ public class Project {
     private LocalDateTime createdAt;
     private Integer ownerId;
 
-    @ManyToMany
-    @JoinTable(
-        name = "project_members",
-        joinColumns = @JoinColumn(name = "project_id"),
-        inverseJoinColumns = @JoinColumn(name = "member_id")
-    )
-    private Set<Member> members = new HashSet<>();
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProjectMember> projectMembers = new HashSet<>();
+
+    public void addMember(Integer userId) {
+        ProjectMember projectMember = new ProjectMember();
+        projectMember.setProject(this);
+        projectMember.setUserId(userId);
+        projectMember.setJoinedAt(LocalDateTime.now());
+        this.projectMembers.add(projectMember);
+    }
+
+    public void removeMember(Integer userId) {
+        this.projectMembers.removeIf(member -> member.getUserId().equals(userId));
+    }
 }
