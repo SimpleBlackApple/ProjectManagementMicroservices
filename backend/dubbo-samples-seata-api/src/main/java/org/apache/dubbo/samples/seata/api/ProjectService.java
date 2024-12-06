@@ -11,6 +11,6 @@ public interface ProjectService {
     void deleteProject(Integer memberId, Integer projectId);
     ProjectDTO addMember(Integer ownerId, Integer projectId, Integer newUserId);
     void removeMember(Integer ownerId, Integer projectId, Integer memberId);
-    List<MemberDTO> getProjectMembers(Integer projectId);
-    ProjectDTO getProject(Integer ownerId, Integer projectId);
+    List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId);
+    ProjectDTO getProject(Integer memberId, Integer projectId);
 } 

@@ -28,12 +28,12 @@ public class ProjectController {
         return projectService.getAllProjects();
     }
 
-    @GetMapping("/{ownerId}/{projectId}")
+    @GetMapping("/{memberId}/{projectId}")
     public ProjectDTO getProject(
-            @PathVariable Integer ownerId,
+            @PathVariable Integer memberId,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(ownerId, projectId);
+        return projectService.getProject(memberId, projectId);
     }
 
     @PostMapping("/{ownerId}")
@@ -79,8 +79,11 @@ public class ProjectController {
         projectService.removeMember(ownerId, projectId, memberId);
     }
 
-    @GetMapping("/{projectId}/members")
-    public List<MemberDTO> getProjectMembers(@PathVariable Integer projectId) {
-        return projectService.getProjectMembers(projectId);
+    @GetMapping("/{memberId}/{projectId}/members")
+    public List<MemberDTO> getProjectMembers(
+            @PathVariable Integer memberId,
+            @PathVariable Integer projectId
+    ) {
+        return projectService.getProjectMembers(memberId, projectId);
     }
 } 

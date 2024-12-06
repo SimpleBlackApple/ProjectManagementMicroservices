@@ -143,7 +143,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<MemberDTO> getProjectMembers(Integer projectId) {
+    public List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId) {
+        // 验证请求用户是否是项目成员
+        validateMembership(projectId, memberId);
+        
         List<ProjectMember> projectMembers = projectMemberRepository.findByProjectId(projectId);
         return projectMembers.stream()
             .map(pm -> {
@@ -156,14 +159,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDTO getProject(Integer ownerId, Integer projectId) {
+    public ProjectDTO getProject(Integer memberId, Integer projectId) {
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
         
-        // 验证用户是否是项目所有者
-        if (!project.getOwnerId().equals(ownerId)) {
-            throw new RuntimeException("Access denied: user is not the owner of this project");
-        }
+        // 验证用户是否是项目成员
+        validateMembership(projectId, memberId);
         
         return convertToProjectDTO(project);
     }
