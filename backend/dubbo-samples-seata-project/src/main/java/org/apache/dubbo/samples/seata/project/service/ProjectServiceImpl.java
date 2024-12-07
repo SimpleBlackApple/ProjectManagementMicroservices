@@ -13,6 +13,7 @@ import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @DubboService
 @Service
+@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     @Resource

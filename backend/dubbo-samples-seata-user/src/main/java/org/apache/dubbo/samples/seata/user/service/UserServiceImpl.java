@@ -10,6 +10,7 @@ import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @DubboService
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

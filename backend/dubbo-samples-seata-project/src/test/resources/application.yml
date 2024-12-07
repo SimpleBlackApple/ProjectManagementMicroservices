@@ -1,0 +1,53 @@
+spring:
+    application:
+        name: ProjectApplication
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/pm_assistant
+        username: ${postgresql.user:postgres}
+        password: ${postgresql.password:123456}
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+    port: 8092 # keep the server port different with app.
+
+dubbo:
+    application:
+        name: ${spring.application.name}
+        qos-enable: false
+    registry:
+        address: nacos://localhost:8848
+    protocol:
+        name: dubbo
+        port: 20901 # keep the dubbo port different with app.
+
+seata:
+    enabled: true
+    application-id: dubbo-samples-seata
+    tx-service-group: default_tx_group
+    service:
+        vgroup-mapping:
+            default_tx_group: default
+    registry:
+        type: nacos
+        nacos:
+            application: seata-server
+            server-addr: 127.0.0.1:8848
+            group: SEATA_GROUP
+            namespace: ""
+            username: ""
+            password: ""
+    config:
+        type: nacos
+        nacos:
+            server-addr: 127.0.0.1:8848
+            group: SEATA_GROUP
+            namespace: ""
+            username: ""
+            password: ""
