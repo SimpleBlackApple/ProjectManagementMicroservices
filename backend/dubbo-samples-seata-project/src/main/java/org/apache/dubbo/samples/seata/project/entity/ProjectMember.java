@@ -25,4 +25,7 @@ public class ProjectMember {
     private Integer userId;
 
     private LocalDateTime joinedAt;
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
 } 

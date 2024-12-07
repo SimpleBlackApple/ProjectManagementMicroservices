@@ -1,6 +1,8 @@
 package org.apache.dubbo.samples.seata.user.service;
 
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.dubbo.samples.seata.api.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.UserCreateBody;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
 import org.apache.dubbo.samples.seata.user.entity.User;
@@ -11,7 +13,7 @@ import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.apache.seata.spring.annotation.GlobalTransactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +24,9 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    @DubboReference(check = false)
+    private ProjectService projectService;
 
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -60,8 +65,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Integer userId) {
-        userRepository.deleteById(userId);
+    @GlobalTransactional
+    public void deleteUser(Integer userId, boolean force) {
+        // 检查用户是否存在
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 如果不是强制删除，检查用户是否是项目所有者
+        if (!force && projectService.isUserProjectOwner(userId)) {
+            throw new RuntimeException("Cannot delete user who owns projects. Use force delete if needed.");
+        }
+
+        // 处理项目相关的数据
+        projectService.handleUserDeletion(userId);
+
+        // 删除用户数据
+        userRepository.delete(user);
     }
 
     private UserDTO convertToDTO(User user) {

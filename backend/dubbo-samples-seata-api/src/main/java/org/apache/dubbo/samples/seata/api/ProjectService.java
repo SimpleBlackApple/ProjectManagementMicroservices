@@ -13,4 +13,6 @@ public interface ProjectService {
     void removeMember(Integer ownerId, Integer projectId, Integer memberId);
     List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId);
     ProjectDTO getProject(Integer memberId, Integer projectId);
+    void handleUserDeletion(Integer userId);
+    boolean isUserProjectOwner(Integer userId);
 } 

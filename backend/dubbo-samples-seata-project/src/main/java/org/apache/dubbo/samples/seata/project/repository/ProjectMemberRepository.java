@@ -9,4 +9,7 @@ import java.util.List;
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Integer> {
     boolean existsByProjectIdAndUserId(Integer projectId, Integer userId);
     List<ProjectMember> findByProjectId(Integer projectId);
+    List<ProjectMember> findByUserIdAndDeletedFalseOrderByJoinedAtAsc(Integer userId);
+    List<ProjectMember> findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(Integer projectId);
+    boolean existsByProjectIdAndUserIdAndDeletedFalse(Integer projectId, Integer userId);
 }

@@ -12,5 +12,5 @@ public interface UserService {
     List<UserDTO> getAllUsers();
     UserDTO createUser(UserCreateBody userCreateBody);
     UserDTO updateUser(Integer userId, UserUpdateBody userUpdateBody);
-    void deleteUser(Integer userId);
+    void deleteUser(Integer userId, boolean force);
 } 

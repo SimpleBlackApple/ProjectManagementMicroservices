@@ -171,6 +171,45 @@ public class ProjectServiceImpl implements ProjectService {
         return convertToProjectDTO(project);
     }
 
+    @Override
+    @GlobalTransactional
+    public void handleUserDeletion(Integer userId) {
+        // 获取用户拥有的所有项目
+        List<Project> ownedProjects = projectRepository.findByOwnerId(userId);
+        
+        for (Project project : ownedProjects) {
+            List<ProjectMember> members = projectMemberRepository.findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(project.getId());
+            
+            // 如果项目只有owner一个成员，直接删除项目
+            if (members.size() <= 1) {
+                projectRepository.delete(project);
+                continue;
+            }
+            
+            // 找到最早加入的非owner成员
+            ProjectMember earliestMember = members.stream()
+                .filter(m -> !m.getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No valid member found to transfer ownership"));
+            
+            // 转移所有权
+            project.setOwnerId(earliestMember.getUserId());
+            projectRepository.save(project);
+        }
+        
+        // 将用户作为成员的所有项目记录标记为已删除
+        List<ProjectMember> memberProjects = projectMemberRepository.findByUserIdAndDeletedFalseOrderByJoinedAtAsc(userId);
+        memberProjects.forEach(member -> {
+            member.setDeleted(true);
+            projectMemberRepository.save(member);
+        });
+    }
+
+    @Override
+    public boolean isUserProjectOwner(Integer userId) {
+        return !projectRepository.findByOwnerId(userId).isEmpty();
+    }
+
     private ProjectDTO convertToProjectDTO(Project project) {
         ProjectDTO dto = new ProjectDTO();
         BeanUtils.copyProperties(project, dto);
