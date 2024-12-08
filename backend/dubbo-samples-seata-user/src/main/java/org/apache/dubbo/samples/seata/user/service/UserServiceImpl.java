@@ -83,6 +83,23 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
+    @Override
+    @GlobalTransactional
+    public void deleteUserRollback(Integer userId) {
+        // 检查用户是否存在
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 处理项目相关的数据
+        projectService.handleUserDeletion(userId);
+
+        // 删除用户数据
+        userRepository.delete(user);
+        
+        // 抛出异常触发回滚
+        throw new RuntimeException("Simulated error for testing rollback");
+    }
+
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         BeanUtils.copyProperties(user, dto);

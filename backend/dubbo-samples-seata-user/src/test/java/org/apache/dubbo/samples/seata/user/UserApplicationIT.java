@@ -1,9 +1,11 @@
 package org.apache.dubbo.samples.seata.user;
 
+import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 public class UserApplicationIT {
+    
+    @Autowired
+    private UserService userService;
     
     private final RestTemplate restTemplate;
     private final String USER_API_BASE_URL = "http://localhost:8081/api/users";
@@ -246,5 +251,53 @@ public class UserApplicationIT {
         
         // 设置为null避免tearDown重复删除
         member2UserId = null;
+    }
+
+    @Test
+    void testForceDeleteOwnerRollback() {
+        // 1. 验证初始状态
+        UserDTO ownerUserBefore = userService.getUserById(ownerUserId);
+        assertNotNull(ownerUserBefore);
+        
+        // 使用 REST API 检查项目所有权
+        ResponseEntity<ProjectDTO> projectResponse = restTemplate.getForEntity(
+            PROJECT_API_BASE_URL + "/{memberId}/{projectId}",
+            ProjectDTO.class,
+            ownerUserId,
+            projectId
+        );
+        assertEquals(ownerUserId, projectResponse.getBody().getOwnerId());
+        
+        // 2. 尝试删除所有者，这会触发回滚
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.deleteUserRollback(ownerUserId);
+        });
+        assertTrue(exception.getMessage().contains("Simulated error for testing rollback"));
+        
+        // 3. 验证由于事务回滚，所有数据应该保持不变
+        UserDTO ownerUserAfter = userService.getUserById(ownerUserId);
+        assertNotNull(ownerUserAfter);
+        assertEquals(ownerUserBefore.getUserId(), ownerUserAfter.getUserId());
+        assertEquals(ownerUserBefore.getUsername(), ownerUserAfter.getUsername());
+        
+        // 验证项目所有权未变
+        ResponseEntity<ProjectDTO> afterProjectResponse = restTemplate.getForEntity(
+            PROJECT_API_BASE_URL + "/{memberId}/{projectId}",
+            ProjectDTO.class,
+            ownerUserId,
+            projectId
+        );
+        assertEquals(ownerUserId, afterProjectResponse.getBody().getOwnerId());
+        
+        // 验证项目成员关系未变
+        List<Map<String, Object>> membersAfter = restTemplate.getForObject(
+            PROJECT_API_BASE_URL + "/{memberId}/{projectId}/members",
+            List.class,
+            ownerUserId,
+            projectId
+        );
+        assertEquals(3, membersAfter.size());  // 应该还是3个成员
+        assertFalse(membersAfter.stream()
+            .anyMatch(m -> m.get("userId").equals(ownerUserId) && (Boolean) m.get("deleted")));  // 所有者不应该被标记为删除
     }
 } 
