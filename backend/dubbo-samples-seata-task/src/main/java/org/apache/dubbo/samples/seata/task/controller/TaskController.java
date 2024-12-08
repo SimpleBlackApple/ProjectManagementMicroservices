@@ -17,6 +17,57 @@ public class TaskController {
         this.taskService = taskService;
     }
     
+    // Task 相关接口
+    @GetMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public TaskDTO getTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId
+    ) {
+        return taskService.getTaskById(memberId, taskId);
+    }
+
+    @GetMapping("/projects/{projectId}/members/{memberId}/tasks")
+    public List<TaskDTO> getProjectTasks(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId
+    ) {
+        return taskService.getProjectTasks(memberId, projectId);
+    }
+    @GetMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}/tasks")
+    public List<TaskDTO> getSprintTasks(
+            @PathVariable Integer memberId,
+            @PathVariable Integer projectId,
+            @PathVariable Integer sprintId
+    ) {
+        return taskService.getSprintTasks(memberId, projectId, sprintId);
+    }
+
+    @PostMapping("/projects/{projectId}/members/{memberId}/tasks")
+    public TaskDTO createTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @RequestBody TaskCreateBody createBody
+    ) {
+        return taskService.createTask(memberId, projectId, createBody);
+    }
+
+    @PutMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public TaskDTO updateTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId,
+        @RequestBody TaskUpdateBody updateBody
+    ) {
+        return taskService.updateTask(memberId, taskId, updateBody);
+    }
+
+    @DeleteMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public void deleteTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId
+    ) {
+        taskService.deleteTask(memberId, taskId);
+    }
+
     // Sprint 相关接口
     @GetMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}")
     public SprintDTO getSprint(
@@ -63,34 +114,5 @@ public class TaskController {
         taskService.deleteSprint(memberId, projectId, sprintId);
     }
 
-    // Task 相关接口
-    @GetMapping("/projects/{projectId}/tasks")
-    public List<TaskDTO> getProjectTasks(@PathVariable Integer projectId) {
-        return taskService.getProjectTasks(projectId);
-    }
 
-    @GetMapping("/sprints/{sprintId}/tasks")
-    public List<TaskDTO> getSprintTasks(@PathVariable Integer sprintId) {
-        return taskService.getSprintTasks(sprintId);
-    }
-
-    @PostMapping
-    public TaskDTO createTask(@RequestBody TaskCreateBody createBody) {
-        return taskService.createTask(createBody);
-    }
-
-    @GetMapping("/{taskId}")
-    public TaskDTO getTask(@PathVariable Integer taskId) {
-        return taskService.getTaskById(taskId);
-    }
-
-    @PutMapping("/{taskId}")
-    public TaskDTO updateTask(@PathVariable Integer taskId, @RequestBody TaskUpdateBody updateBody) {
-        return taskService.updateTask(taskId, updateBody);
-    }
-
-    @DeleteMapping("/{taskId}")
-    public void deleteTask(@PathVariable Integer taskId) {
-        taskService.deleteTask(taskId);
-    }
 }

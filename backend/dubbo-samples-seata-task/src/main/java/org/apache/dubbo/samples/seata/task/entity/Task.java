@@ -25,14 +25,22 @@ public class Task {
     @Column(name = "project_id", nullable = false)
     private Integer projectId;
     
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     private Integer memberId;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
 
     public void validateDates() {
+        if (startDate == null || dueDate == null) {
+            throw new RuntimeException("Start date and due date are required");
+        }
+        
+        if (startDate.isAfter(dueDate)) {
+            throw new RuntimeException("Start date must be before due date");
+        }
+        
         if (sprint != null) {
             if (startDate.isBefore(sprint.getStartDate()) || 
                 dueDate.isAfter(sprint.getEndDate())) {
