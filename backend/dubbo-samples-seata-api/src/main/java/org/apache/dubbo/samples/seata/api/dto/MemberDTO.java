@@ -7,4 +7,5 @@ import java.time.LocalDateTime;
 public class MemberDTO {
     private Integer userId;
     private LocalDateTime joinedAt;
+    private boolean deleted;
 }

@@ -2,6 +2,8 @@ package org.apache.dubbo.samples.seata.project.controller;
 
 import org.apache.dubbo.samples.seata.api.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,5 +87,24 @@ public class ProjectController {
             @PathVariable Integer projectId
     ) {
         return projectService.getProjectMembers(memberId, projectId);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+        if (e.getMessage().contains("Project not found") || 
+            e.getMessage().contains("User not found")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+        }
+        if (e.getMessage().contains("Access denied")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(e.getMessage());
+        }
+        if (e.getMessage().contains("User is already a member")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(e.getMessage());
     }
 } 

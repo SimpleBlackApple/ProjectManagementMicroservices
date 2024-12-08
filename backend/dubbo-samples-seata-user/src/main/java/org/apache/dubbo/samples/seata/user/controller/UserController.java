@@ -2,6 +2,7 @@ package org.apache.dubbo.samples.seata.user.controller;
 
 import org.apache.dubbo.samples.seata.api.dto.UserCreateBody;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.apache.dubbo.samples.seata.api.UserService;
@@ -20,8 +21,16 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable("id") Integer userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+    public ResponseEntity<?> getUser(@PathVariable("id") Integer userId) {
+        try {
+            return ResponseEntity.ok(userService.getUserById(userId));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+            }
+            throw e;
+        }
     }
 
     @GetMapping
@@ -35,21 +44,55 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<?> updateUser(
             @PathVariable("id") Integer userId,
             @RequestBody UserUpdateBody userUpdateBody) {
-        return ResponseEntity.ok(userService.updateUser(userId, userUpdateBody));
+        try {
+            return ResponseEntity.ok(userService.updateUser(userId, userUpdateBody));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+            }
+            throw e;
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") Integer userId) {
-        userService.deleteUser(userId, false);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteUser(@PathVariable("id") Integer userId) {
+        try {
+            userService.deleteUser(userId, false);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Cannot delete user who owns projects")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+            }
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+            }
+            throw e;
+        }
     }
 
     @DeleteMapping("/{id}/force")
-    public ResponseEntity<Void> forceDeleteUser(@PathVariable("id") Integer userId) {
-        userService.deleteUser(userId, true);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> forceDeleteUser(@PathVariable("id") Integer userId) {
+        try {
+            userService.deleteUser(userId, true);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(e.getMessage());
     }
 }

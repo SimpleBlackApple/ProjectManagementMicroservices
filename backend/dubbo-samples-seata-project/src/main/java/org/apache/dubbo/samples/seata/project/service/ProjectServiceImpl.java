@@ -35,7 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
     private UserService userService;
 
     private void validateMembership(Integer projectId, Integer userId) {
-        if (!projectMemberRepository.existsByProjectIdAndUserId(projectId, userId)) {
+        if (!projectMemberRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, userId)) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
     }
@@ -113,13 +113,13 @@ public class ProjectServiceImpl implements ProjectService {
             .orElseThrow(() -> new RuntimeException("Project not found"));
         
         if (!project.getOwnerId().equals(ownerId)) {
-            throw new RuntimeException("Only project owner can add members");
+            throw new RuntimeException("Access denied: only project owner can add members");
         }
         
         // 验证新成员是否存在
         userService.getUserById(newUserId);
         
-        if (projectMemberRepository.existsByProjectIdAndUserId(projectId, newUserId)) {
+        if (projectMemberRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, newUserId)) {
             throw new RuntimeException("User is already a member of this project");
         }
         
@@ -155,6 +155,7 @@ public class ProjectServiceImpl implements ProjectService {
                 MemberDTO dto = new MemberDTO();
                 dto.setUserId(pm.getUserId());
                 dto.setJoinedAt(pm.getJoinedAt());
+                dto.setDeleted(pm.isDeleted());
                 return dto;
             })
             .collect(Collectors.toList());
@@ -220,6 +221,7 @@ public class ProjectServiceImpl implements ProjectService {
                 MemberDTO memberDTO = new MemberDTO();
                 memberDTO.setUserId(pm.getUserId());
                 memberDTO.setJoinedAt(pm.getJoinedAt());
+                memberDTO.setDeleted(pm.isDeleted());
                 return memberDTO;
             })
             .collect(Collectors.toList()));
