@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @DubboService
 @Service
@@ -108,25 +109,30 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @GlobalTransactional
-    public ProjectDTO addMember(Integer ownerId, Integer projectId, Integer newUserId) {
+    public ProjectDTO addMember(Integer userId, Integer projectId, Integer newMemberId) {
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
-        
-        if (!project.getOwnerId().equals(ownerId)) {
-            throw new RuntimeException("Access denied: only project owner can add members");
+            
+        // 验证权限
+        if (!userId.equals(project.getOwnerId())) {
+            throw new RuntimeException("Only project owner can add members");
         }
-        
-        // 验证新成员是否存在
-        userService.getUserById(newUserId);
-        
-        if (projectMemberRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, newUserId)) {
-            throw new RuntimeException("User is already a member of this project");
-        }
-        
-        project.addMember(newUserId);
-        project = projectRepository.save(project);
-        
-        return convertToProjectDTO(project);
+
+        // 添加新成员
+        ProjectMember newMember = new ProjectMember();
+        newMember.setProject(project);
+        newMember.setUserId(newMemberId);
+        newMember.setJoinedAt(LocalDateTime.now());
+        projectMemberRepository.save(newMember);
+
+        // 转换为DTO并手动添加新成员信息
+        ProjectDTO projectDTO = convertToProjectDTO(project);
+        MemberDTO memberDTO = new MemberDTO();
+        memberDTO.setUserId(newMemberId);
+        memberDTO.setJoinedAt(newMember.getJoinedAt());
+        projectDTO.getMembers().add(memberDTO);
+
+        return projectDTO;
     }
 
     @Override
@@ -166,7 +172,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
         
-        // 验证用户是否是项目成员
+        // 验证用户是否是项目成���
         validateMembership(projectId, memberId);
         
         return convertToProjectDTO(project);
@@ -215,16 +221,9 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDTO dto = new ProjectDTO();
         BeanUtils.copyProperties(project, dto);
         
-        // 添加成员信息
-//        dto.setMembers(project.getProjectMembers().stream()
-//            .map(pm -> {
-//                MemberDTO memberDTO = new MemberDTO();
-//                memberDTO.setUserId(pm.getUserId());
-//                memberDTO.setJoinedAt(pm.getJoinedAt());
-//                return memberDTO;
-//            })
-//            .collect(Collectors.toList()));
-
+        // 初始化空列表，避免NPE
+        dto.setMembers(new ArrayList<>());
+        
         return dto;
     }
 }

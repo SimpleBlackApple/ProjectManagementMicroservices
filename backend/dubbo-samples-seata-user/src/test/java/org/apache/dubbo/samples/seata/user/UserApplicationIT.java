@@ -161,16 +161,17 @@ public class UserApplicationIT {
         });
         assertTrue(exception.getResponseBodyAsString().contains("Cannot delete user who owns projects"));
 
-        // 2. 获取删除前的项目信息
-        ResponseEntity<ProjectDTO> beforeDeleteProject = restTemplate.getForEntity(
-            PROJECT_API_BASE_URL + "/{memberId}/{projectId}",
-            ProjectDTO.class,
+        // 2. 获取删除前的项目成员信息
+        List<Map<String, Object>> beforeDeleteMembers = restTemplate.getForObject(
+            PROJECT_API_BASE_URL + "/{memberId}/{projectId}/members",
+            List.class,
             member1UserId,
             projectId
         );
         
-        assertEquals(ownerUserId, beforeDeleteProject.getBody().getOwnerId());
-        assertEquals(3, beforeDeleteProject.getBody().getMembers().size());
+        assertEquals(3, beforeDeleteMembers.size());
+        assertTrue(beforeDeleteMembers.stream()
+            .anyMatch(m -> m.get("userId").equals(ownerUserId) && !(Boolean)m.get("deleted")));
 
         // 3. 强制删除项目所有者
         restTemplate.delete(USER_API_BASE_URL + "/{id}/force", ownerUserId);
@@ -187,16 +188,16 @@ public class UserApplicationIT {
         assertEquals(member1UserId, updatedProject.getOwnerId());
         
         // 5. 验证成员列表中原所有者已标记为删除
-        List<Map<String, Object>> members = restTemplate.getForObject(
+        List<Map<String, Object>> afterDeleteMembers = restTemplate.getForObject(
             PROJECT_API_BASE_URL + "/{memberId}/{projectId}/members",
             List.class,
             member1UserId,
             projectId
         );
         
-        // 验证原所有者的成员记录已被标记为删除
-        assertTrue(members.stream()
-            .anyMatch(m -> m.get("userId").equals(ownerUserId) && (Boolean) m.get("deleted")));
+        assertEquals(3, afterDeleteMembers.size());  // 总成员数应该保持不变
+        assertTrue(afterDeleteMembers.stream()
+            .anyMatch(m -> m.get("userId").equals(ownerUserId) && (Boolean)m.get("deleted")));
 
         // 6. 验证无法再获取已删除用户的信息
         HttpClientErrorException userNotFoundException = assertThrows(HttpClientErrorException.NotFound.class, () -> {
@@ -214,10 +215,22 @@ public class UserApplicationIT {
 
     @Test
     void testNormalMemberDeletion() {
-        // 1. 测试删除普通成员
+        // 1. 获取删除前的成员信息
+        List<Map<String, Object>> beforeDeleteMembers = restTemplate.getForObject(
+            PROJECT_API_BASE_URL + "/{memberId}/{projectId}/members",
+            List.class,
+            ownerUserId,
+            projectId
+        );
+        
+        assertEquals(3, beforeDeleteMembers.size());
+        assertTrue(beforeDeleteMembers.stream()
+            .anyMatch(m -> m.get("userId").equals(member2UserId) && !(Boolean)m.get("deleted")));
+
+        // 2. 测试删除普通成员
         restTemplate.delete(USER_API_BASE_URL + "/{id}", member2UserId);
 
-        // 2. 验证项目所有权未发生变化
+        // 3. 验证项目所有权未发生变化
         ResponseEntity<ProjectDTO> projectResponse = restTemplate.getForEntity(
             PROJECT_API_BASE_URL + "/{memberId}/{projectId}",
             ProjectDTO.class,
@@ -227,19 +240,19 @@ public class UserApplicationIT {
         
         assertEquals(ownerUserId, projectResponse.getBody().getOwnerId());
         
-        // 3. 验证成员已被标记为删除
-        List<Map<String, Object>> members = restTemplate.getForObject(
+        // 4. 验证成员已被标记为删除
+        List<Map<String, Object>> afterDeleteMembers = restTemplate.getForObject(
             PROJECT_API_BASE_URL + "/{memberId}/{projectId}/members",
             List.class,
             ownerUserId,
             projectId
         );
         
-        // 验证被删除成员的记录已被标记为删除
-        assertTrue(members.stream()
-            .anyMatch(m -> m.get("userId").equals(member2UserId) && (Boolean) m.get("deleted")));
+        assertEquals(3, afterDeleteMembers.size());  // 总成员数应该保持不变
+        assertTrue(afterDeleteMembers.stream()
+            .anyMatch(m -> m.get("userId").equals(member2UserId) && (Boolean)m.get("deleted")));
 
-        // 4. 验证无法再获取已删除用户的信息
+        // 5. 验证无法再获取已删除用户的信息
         HttpClientErrorException userNotFoundException = assertThrows(HttpClientErrorException.NotFound.class, () -> {
             restTemplate.getForEntity(
                 USER_API_BASE_URL + "/{id}",
