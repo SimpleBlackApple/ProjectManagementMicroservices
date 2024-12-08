@@ -17,17 +17,27 @@ public class Task {
     private String type;
     private String status;
     private Integer storyPoints;
+    private LocalDateTime startDate;
+    private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime dueDate;
     
     @Column(name = "project_id", nullable = false)
     private Integer projectId;
     
+    @Column(name = "member_id")
+    private Integer memberId;
+    
     @ManyToOne
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
-    
-    @OneToOne(mappedBy = "assignedTask")
-    private Member assignedMember;
+
+    public void validateDates() {
+        if (sprint != null) {
+            if (startDate.isBefore(sprint.getStartDate()) || 
+                dueDate.isAfter(sprint.getEndDate())) {
+                throw new RuntimeException("Task dates must be within sprint date range");
+            }
+        }
+    }
 } 

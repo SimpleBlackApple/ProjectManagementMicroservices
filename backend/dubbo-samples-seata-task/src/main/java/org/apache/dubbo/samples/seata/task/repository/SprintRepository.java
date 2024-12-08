@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface SprintRepository extends JpaRepository<Sprint, Integer> {
     List<Sprint> findByProjectId(Integer projectId);
-    void deleteByProjectId(Integer projectId);
+
 }

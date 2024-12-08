@@ -7,6 +7,5 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByProjectId(Integer projectId);
     List<Task> findBySprintId(Integer sprintId);
-    List<Task> findByAssignedMemberMemberId(Integer memberId);
-    void deleteByProjectId(Integer projectId);
+
 }

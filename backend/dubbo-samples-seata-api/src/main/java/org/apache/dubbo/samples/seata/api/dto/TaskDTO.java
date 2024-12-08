@@ -8,12 +8,14 @@ public class TaskDTO {
     private Integer id;
     private String title;
     private String description;
-    private String type; // TASK, USER_STORY, ISSUE, BUG
-    private String status; // TO_DO, IN_PROGRESS, DONE
+    private String type;
+    private String status;
     private Integer projectId;
     private Integer sprintId;
+    private Integer memberId;
     private Integer storyPoints;
+    private LocalDateTime startDate;
+    private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime dueDate;
 } 

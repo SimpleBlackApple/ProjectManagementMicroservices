@@ -5,11 +5,11 @@ import java.util.List;
 
 public interface TaskService {
     // Sprint 相关方法
-    SprintDTO getSprintById(Integer sprintId);
-    List<SprintDTO> getProjectSprints(Integer projectId);
-    SprintDTO createSprint(SprintCreateBody createBody);
-    SprintDTO updateSprint(Integer sprintId, SprintUpdateBody updateBody);
-    void deleteSprint(Integer sprintId);
+    SprintDTO getSprintById(Integer memberId, Integer projectId, Integer sprintId);
+    List<SprintDTO> getProjectSprints(Integer memberId, Integer projectId);
+    SprintDTO createSprint(Integer memberId, Integer projectId, SprintCreateBody createBody);
+    SprintDTO updateSprint(Integer memberId, Integer projectId, Integer sprintId, SprintUpdateBody updateBody);
+    void deleteSprint(Integer memberId, Integer projectId, Integer sprintId);
 
     // Task 相关方法
     TaskDTO getTaskById(Integer taskId);
@@ -18,9 +18,4 @@ public interface TaskService {
     TaskDTO createTask(TaskCreateBody createBody);
     TaskDTO updateTask(Integer taskId, TaskUpdateBody updateBody);
     void deleteTask(Integer taskId);
-
-    // Member 相关方法
-    void addProjectMember(Integer projectId, Integer memberId);
-    void removeProjectMember(Integer projectId, Integer memberId);
-    List<MemberDTO> getProjectMembers(Integer projectId);
 } 

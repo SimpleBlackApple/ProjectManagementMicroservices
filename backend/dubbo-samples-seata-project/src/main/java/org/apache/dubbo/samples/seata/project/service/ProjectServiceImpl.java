@@ -174,14 +174,14 @@ public class ProjectServiceImpl implements ProjectService {
         BeanUtils.copyProperties(project, dto);
         
         // 添加成员信息
-        dto.setMembers(project.getProjectMembers().stream()
-            .map(pm -> {
-                MemberDTO memberDTO = new MemberDTO();
-                memberDTO.setUserId(pm.getUserId());
-                memberDTO.setJoinedAt(pm.getJoinedAt());
-                return memberDTO;
-            })
-            .collect(Collectors.toList()));
+//        dto.setMembers(project.getProjectMembers().stream()
+//            .map(pm -> {
+//                MemberDTO memberDTO = new MemberDTO();
+//                memberDTO.setUserId(pm.getUserId());
+//                memberDTO.setJoinedAt(pm.getJoinedAt());
+//                return memberDTO;
+//            })
+//            .collect(Collectors.toList()));
             
         return dto;
     }
