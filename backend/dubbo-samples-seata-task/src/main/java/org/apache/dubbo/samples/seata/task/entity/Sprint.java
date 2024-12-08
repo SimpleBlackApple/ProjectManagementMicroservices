@@ -24,9 +24,6 @@ public class Sprint {
     @OneToMany(mappedBy = "sprint")
     private Set<Task> tasks;
     
-    @ManyToMany(mappedBy = "sprints")
-    private Set<Member> members;
-    
     @Transient
     public Integer getTotalStoryPoints() {
         return tasks.stream()

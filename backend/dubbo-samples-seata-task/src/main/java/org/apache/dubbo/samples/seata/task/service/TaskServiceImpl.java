@@ -1,17 +1,21 @@
 package org.apache.dubbo.samples.seata.task.service;
 
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.dubbo.samples.seata.api.ProjectService;
 import org.apache.dubbo.samples.seata.api.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.apache.dubbo.samples.seata.task.entity.Task;
 import org.apache.dubbo.samples.seata.task.entity.Sprint;
-import org.apache.dubbo.samples.seata.task.entity.Member;
 import org.apache.dubbo.samples.seata.task.repository.TaskRepository;
 import org.apache.dubbo.samples.seata.task.repository.SprintRepository;
-import org.apache.dubbo.samples.seata.task.repository.MemberRepository;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.seata.spring.annotation.GlobalTransactional;
+
+
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -19,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @DubboService
+@Service
 public class TaskServiceImpl implements TaskService {
 
     @Resource
@@ -27,39 +32,86 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private TaskRepository taskRepository;
 
-    @Resource
-    private MemberRepository memberRepository;
+    @DubboReference(check = false, timeout = 30000)
+    private ProjectService projectService;
 
     // Sprint 相关操作
     @Override
-    public SprintDTO getSprintById(Integer sprintId) {
+    @GlobalTransactional
+    public SprintDTO getSprintById(Integer memberId, Integer projectId, Integer sprintId) {
+        // 验证用户和项目
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Project not found or user is not a member");
+        }
+        
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                
+        if (!sprint.getProjectId().equals(projectId)) {
+            throw new RuntimeException("Sprint does not belong to this project");
+        }
+        
         return convertToSprintDTO(sprint);
     }
 
     @Override
-    public List<SprintDTO> getProjectSprints(Integer projectId) {
+    @GlobalTransactional
+    public List<SprintDTO> getProjectSprints(Integer memberId, Integer projectId) {
+        // 验证用户和项目
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Project not found or user is not a member");
+        }
+        
         return sprintRepository.findByProjectId(projectId).stream()
                 .map(this::convertToSprintDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional
-    public SprintDTO createSprint(SprintCreateBody createBody) {
-        Sprint sprint = new Sprint();
-        BeanUtils.copyProperties(createBody, sprint);
-        sprint.setProjectId(createBody.getProjectId());
-        sprint.setStatus("TO_DO");
-        return convertToSprintDTO(sprintRepository.save(sprint));
+    @GlobalTransactional(timeoutMills = 30000)
+    public SprintDTO createSprint(Integer memberId, Integer projectId, SprintCreateBody createBody) {
+        try {
+            // 验证用户是否是项目成员
+            ProjectDTO project = projectService.getProject(memberId, projectId);
+            if (project == null) {
+                throw new RuntimeException("Project not found");
+            }
+            
+            Sprint sprint = new Sprint();
+            sprint.setName(createBody.getName());
+            sprint.setProjectId(projectId);
+            sprint.setStatus("TO_DO");
+            sprint.setStartDate(createBody.getStartDate());
+            sprint.setEndDate(createBody.getEndDate());
+            
+            validateSprintDates(sprint);
+            
+            return convertToSprintDTO(sprintRepository.save(sprint));
+        } catch (Exception e) {
+            if (e.getMessage().contains("Access denied") || e.getMessage().contains("not a member")) {
+                throw new RuntimeException("Access denied: user is not a member of this project");
+            }
+            throw new RuntimeException("Failed to create sprint: " + e.getMessage());
+        }
     }
 
     @Override
-    @Transactional
-    public SprintDTO updateSprint(Integer sprintId, SprintUpdateBody updateBody) {
+    @GlobalTransactional
+    public SprintDTO updateSprint(Integer memberId, Integer projectId, Integer sprintId, SprintUpdateBody updateBody) {
+        // 验证用户和项目
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Project not found or user is not a member");
+        }
+        
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                
+        if (!sprint.getProjectId().equals(projectId)) {
+            throw new RuntimeException("Sprint does not belong to this project");
+        }
 
         if (updateBody.getStatus() != null) {
             validateSprintStatusChange(sprint, updateBody.getStatus());
@@ -70,105 +122,192 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Transactional
-    public void deleteSprint(Integer sprintId) {
+    @GlobalTransactional
+    public void deleteSprint(Integer memberId, Integer projectId, Integer sprintId) {
+        // 验证用户和项目
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Project not found or user is not a member");
+        }
+        
+        Sprint sprint = sprintRepository.findById(sprintId)
+                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                
+        if (!sprint.getProjectId().equals(projectId)) {
+            throw new RuntimeException("Sprint does not belong to this project");
+        }
+        
         sprintRepository.deleteById(sprintId);
     }
 
     // Task 相关操作
     @Override
-    public TaskDTO getTaskById(Integer taskId) {
+    @GlobalTransactional
+    public TaskDTO getTaskById(Integer memberId, Integer taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+                
+        // 验证用户是否是项目成员
+        ProjectDTO project = projectService.getProject(memberId, task.getProjectId());
+        if (project == null) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
+        }
+        
         return convertToTaskDTO(task);
     }
 
     @Override
-    public List<TaskDTO> getProjectTasks(Integer projectId) {
-        return taskRepository.findByProjectId(projectId).stream()
-                .map(this::convertToTaskDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<TaskDTO> getSprintTasks(Integer sprintId) {
-        return taskRepository.findBySprintId(sprintId).stream()
-                .map(this::convertToTaskDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public TaskDTO createTask(TaskCreateBody createBody) {
-        Task task = new Task();
-        BeanUtils.copyProperties(createBody, task);
-        task.setProjectId(createBody.getProjectId());
-        task.setStatus("TO_DO");
-        task.setCreatedAt(LocalDateTime.now());
-        task.setUpdatedAt(LocalDateTime.now());
-
-        if (createBody.getSprintId() != null) {
-            Sprint sprint = sprintRepository.findById(createBody.getSprintId())
-                    .orElseThrow(() -> new RuntimeException("Sprint not found"));
-            task.setSprint(sprint);
+    @GlobalTransactional
+    public List<TaskDTO> getProjectTasks(Integer memberId, Integer projectId) {
+        // 验证用户是否是项目成员
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
-
-        return convertToTaskDTO(taskRepository.save(task));
+        
+        List<Task> tasks = taskRepository.findByProjectId(projectId);
+        return tasks.stream()
+                .map(task -> {
+                    TaskDTO dto = new TaskDTO();
+                    BeanUtils.copyProperties(task, dto);
+                    if (task.getSprint() != null) {
+                        dto.setSprintId(task.getSprint().getId());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional
-    public TaskDTO updateTask(Integer taskId, TaskUpdateBody updateBody) {
+    @GlobalTransactional
+    public TaskDTO createTask(Integer memberId, Integer projectId, TaskCreateBody createBody) {
+        try {
+            // 验证创建者是否是项目成员
+            ProjectDTO project = projectService.getProject(memberId, projectId);
+            if (project == null) {
+                throw new RuntimeException("Project not found");
+            }
+            
+            // 验证指定的负责人是否是项目成员
+            Integer assigneeId = createBody.getManagerId();
+            if (assigneeId != null) {
+                ProjectDTO assigneeProject = projectService.getProject(assigneeId, projectId);
+                if (assigneeProject == null) {
+                    throw new RuntimeException("Assigned member is not a member of this project");
+                }
+            } else {
+                // 如果没有指定负责人，则设置为创建者
+                assigneeId = memberId;
+            }
+            
+            Task task = new Task();
+            BeanUtils.copyProperties(createBody, task);
+            task.setProjectId(projectId);
+            task.setMemberId(assigneeId);  // 设置任务负责人
+            task.setStatus("TO_DO");
+            task.setCreatedAt(LocalDateTime.now());
+            task.setUpdatedAt(LocalDateTime.now());
+            
+            // 如果指定了 sprint，验证 sprint
+            if (createBody.getSprintId() != null) {
+                Sprint sprint = sprintRepository.findById(createBody.getSprintId())
+                        .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                
+                if (!sprint.getProjectId().equals(projectId)) {
+                    throw new RuntimeException("Sprint does not belong to this project");
+                }
+                task.setSprint(sprint);
+            }
+            
+            // 验证日期范围
+            task.validateDates();
+            
+            return convertToTaskDTO(taskRepository.save(task));
+        } catch (Exception e) {
+            if (e.getMessage().contains("Access denied") || e.getMessage().contains("not a member")) {
+                throw new RuntimeException("Access denied: user is not a member of this project");
+            }
+            throw new RuntimeException("Failed to create task: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @GlobalTransactional
+    public TaskDTO updateTask(Integer memberId, Integer taskId, TaskUpdateBody updateBody) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-
-        if (updateBody.getStatus() != null) {
-            validateTaskStatusChange(task, updateBody.getStatus());
+                
+        // 验证用户是否是项目成员
+        ProjectDTO project = projectService.getProject(memberId, task.getProjectId());
+        if (project == null) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
-
-        BeanCopyUtils.copyNonNullProperties(updateBody, task);
-        task.setUpdatedAt(LocalDateTime.now());
-
+        
+        // 只有任务负责人可以更新任务
+        if (!task.getMemberId().equals(memberId)) {
+            throw new RuntimeException("Only task assignee can update the task");
+        }
+        
         if (updateBody.getSprintId() != null) {
             Sprint sprint = sprintRepository.findById(updateBody.getSprintId())
                     .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                    
+            if (!sprint.getProjectId().equals(task.getProjectId())) {
+                throw new RuntimeException("Sprint does not belong to this project");
+            }
             task.setSprint(sprint);
         }
-
+        
+        BeanCopyUtils.copyNonNullProperties(updateBody, task);
+        task.setUpdatedAt(LocalDateTime.now());
+        
+        // 验证日期范围
+        task.validateDates();
+        
         return convertToTaskDTO(taskRepository.save(task));
     }
 
     @Override
-    @Transactional
-    public void deleteTask(Integer taskId) {
+    @GlobalTransactional
+    public void deleteTask(Integer memberId, Integer taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+                
+        // 验证用户是否是项目成员
+        ProjectDTO project = projectService.getProject(memberId, task.getProjectId());
+        if (project == null) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
+        }
+        
+        
         taskRepository.deleteById(taskId);
     }
 
-    // Member 相关操作
     @Override
-    @Transactional
-    public void addProjectMember(Integer projectId, Integer memberId) {
-        Member member = new Member();
-        member.setMemberId(memberId);
-        member.setProjectId(projectId);
-        memberRepository.save(member);
-    }
-
-    @Override
-    @Transactional
-    public void removeProjectMember(Integer projectId, Integer memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-        if (!projectId.equals(member.getProjectId())) {
-            throw new RuntimeException("Member does not belong to this project");
+    @GlobalTransactional
+    public List<TaskDTO> getSprintTasks(Integer memberId, Integer projectId, Integer sprintId) {
+        // 验证用户是否是项目成员
+        ProjectDTO project = projectService.getProject(memberId, projectId);
+        if (project == null) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
-        memberRepository.deleteById(memberId);
-    }
-
-    @Override
-    public List<MemberDTO> getProjectMembers(Integer projectId) {
-        return memberRepository.findByProjectId(projectId).stream()
-                .map(this::convertToMemberDTO)
+        
+        // 验证 sprint 是否属于该项目
+        Sprint sprint = sprintRepository.findById(sprintId)
+                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+                
+        if (!sprint.getProjectId().equals(projectId)) {
+            throw new RuntimeException("Sprint does not belong to this project");
+        }
+        
+        List<Task> tasks = taskRepository.findBySprintId(sprintId);
+        return tasks.stream()
+                .map(task -> {
+                    TaskDTO dto = new TaskDTO();
+                    BeanUtils.copyProperties(task, dto);
+                    dto.setSprintId(sprintId);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -187,32 +326,62 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private void validateTaskStatusChange(Task task, String newStatus) {
-        if (task.getSprint() != null && !task.getSprint().getStatus().equals("IN_PROGRESS")) {
-            throw new RuntimeException("Cannot change task status when sprint is not in progress");
-        }
-    }
-
     private SprintDTO convertToSprintDTO(Sprint sprint) {
         SprintDTO dto = new SprintDTO();
-        BeanUtils.copyProperties(sprint, dto);
-        dto.setTotalStoryPoints(sprint.getTotalStoryPoints());
-        dto.setCompletedStoryPoints(sprint.getCompletedStoryPoints());
+
+        // 只复制基本属性
+        dto.setId(sprint.getId());
+        dto.setProjectId(sprint.getProjectId());
+        dto.setName(sprint.getName());
+        dto.setStartDate(sprint.getStartDate());
+        dto.setEndDate(sprint.getEndDate());
+        dto.setStatus(sprint.getStatus());
+        
+        // 如果需要计算故事点，确保 tasks 集合已始化
+        if (sprint.getTasks() != null) {
+            dto.setTotalStoryPoints(sprint.getTotalStoryPoints());
+            dto.setCompletedStoryPoints(sprint.getCompletedStoryPoints());
+        } else {
+            dto.setTotalStoryPoints(0);
+            dto.setCompletedStoryPoints(0);
+        }
+        
         return dto;
     }
 
     private TaskDTO convertToTaskDTO(Task task) {
         TaskDTO dto = new TaskDTO();
-        BeanUtils.copyProperties(task, dto);
+        dto.setId(task.getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setType(task.getType());
+        dto.setStatus(task.getStatus());
+        dto.setProjectId(task.getProjectId());
+        dto.setManagerId(task.getMemberId());
+        dto.setStoryPoints(task.getStoryPoints());
+        dto.setStartDate(task.getStartDate());
+        dto.setDueDate(task.getDueDate());
+        dto.setCreatedAt(task.getCreatedAt());
+        dto.setUpdatedAt(task.getUpdatedAt());
+        
         if (task.getSprint() != null) {
             dto.setSprintId(task.getSprint().getId());
         }
+        
         return dto;
     }
-
-    private MemberDTO convertToMemberDTO(Member member) {
-        MemberDTO dto = new MemberDTO();
-        BeanUtils.copyProperties(member, dto);
-        return dto;
+    
+    private void validateSprintDates(Sprint sprint) {
+        if (sprint.getStartDate() == null || sprint.getEndDate() == null) {
+            throw new RuntimeException("Start date and end date are required");
+        }
+        
+        if (sprint.getStartDate().isAfter(sprint.getEndDate())) {
+            throw new RuntimeException("Start date must be before end date");
+        }
+        
+        if (sprint.getStartDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Start date cannot be in the past");
+        }
     }
 }

@@ -18,7 +18,7 @@ spring:
 
 dubbo:
     application:
-        logger: slf4j
+#        logger: slf4j
         name: ${spring.application.name}
         qos-enable: false
     registry:

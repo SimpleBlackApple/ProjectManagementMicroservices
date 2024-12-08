@@ -11,83 +11,108 @@ import java.util.List;
 @RequestMapping("/api/tasks")
 public class TaskController {
     
-    @DubboReference(check = false)
-    private TaskService taskService;
+    private final TaskService taskService;
     
-//    public TaskController(TaskService taskService) {
-//        this.taskService = taskService;
-//    }
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
     
-    // Sprint 相关接口
-    @GetMapping("/sprints/{sprintId}")
-    public SprintDTO getSprint(@PathVariable Integer sprintId) {
-        return taskService.getSprintById(sprintId);
-    }
-
-    @GetMapping("/projects/{projectId}/sprints")
-    public List<SprintDTO> getProjectSprints(@PathVariable Integer projectId) {
-        return taskService.getProjectSprints(projectId);
-    }
-
-    @PostMapping("/sprints")
-    public SprintDTO createSprint(@RequestBody SprintCreateBody createBody) {
-        return taskService.createSprint(createBody);
-    }
-
-    @PutMapping("/sprints/{sprintId}")
-    public SprintDTO updateSprint(@PathVariable Integer sprintId, @RequestBody SprintUpdateBody updateBody) {
-        return taskService.updateSprint(sprintId, updateBody);
-    }
-
-    @DeleteMapping("/sprints/{sprintId}")
-    public void deleteSprint(@PathVariable Integer sprintId) {
-        taskService.deleteSprint(sprintId);
-    }
-
     // Task 相关接口
-    @GetMapping("/projects/{projectId}/tasks")
-    public List<TaskDTO> getProjectTasks(@PathVariable Integer projectId) {
-        return taskService.getProjectTasks(projectId);
+    @GetMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public TaskDTO getTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId
+    ) {
+        return taskService.getTaskById(memberId, taskId);
     }
 
-    @GetMapping("/sprints/{sprintId}/tasks")
-    public List<TaskDTO> getSprintTasks(@PathVariable Integer sprintId) {
-        return taskService.getSprintTasks(sprintId);
+    @GetMapping("/projects/{projectId}/members/{memberId}/tasks")
+    public List<TaskDTO> getProjectTasks(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId
+    ) {
+        return taskService.getProjectTasks(memberId, projectId);
+    }
+    @GetMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}/tasks")
+    public List<TaskDTO> getSprintTasks(
+            @PathVariable Integer memberId,
+            @PathVariable Integer projectId,
+            @PathVariable Integer sprintId
+    ) {
+        return taskService.getSprintTasks(memberId, projectId, sprintId);
     }
 
-    @PostMapping
-    public TaskDTO createTask(@RequestBody TaskCreateBody createBody) {
-        return taskService.createTask(createBody);
+    @PostMapping("/projects/{projectId}/members/{memberId}/tasks")
+    public TaskDTO createTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @RequestBody TaskCreateBody createBody
+    ) {
+        return taskService.createTask(memberId, projectId, createBody);
     }
 
-    @GetMapping("/{taskId}")
-    public TaskDTO getTask(@PathVariable Integer taskId) {
-        return taskService.getTaskById(taskId);
+    @PutMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public TaskDTO updateTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId,
+        @RequestBody TaskUpdateBody updateBody
+    ) {
+        return taskService.updateTask(memberId, taskId, updateBody);
     }
 
-    @PutMapping("/{taskId}")
-    public TaskDTO updateTask(@PathVariable Integer taskId, @RequestBody TaskUpdateBody updateBody) {
-        return taskService.updateTask(taskId, updateBody);
+    @DeleteMapping("/projects/{projectId}/members/{memberId}/tasks/{taskId}")
+    public void deleteTask(
+        @PathVariable Integer memberId,
+        @PathVariable Integer taskId
+    ) {
+        taskService.deleteTask(memberId, taskId);
     }
 
-    @DeleteMapping("/{taskId}")
-    public void deleteTask(@PathVariable Integer taskId) {
-        taskService.deleteTask(taskId);
+    // Sprint 相关接口
+    @GetMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}")
+    public SprintDTO getSprint(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @PathVariable Integer sprintId
+    ) {
+        return taskService.getSprintById(memberId, projectId, sprintId);
     }
 
-    // Member 相关接口
-    @PostMapping("/projects/{projectId}/members/{memberId}")
-    public void addProjectMember(@PathVariable Integer projectId, @PathVariable Integer memberId) {
-        taskService.addProjectMember(projectId, memberId);
+    @GetMapping("/projects/{projectId}/members/{memberId}/sprints")
+    public List<SprintDTO> getProjectSprints(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId
+    ) {
+        return taskService.getProjectSprints(memberId, projectId);
     }
 
-    @DeleteMapping("/projects/{projectId}/members/{memberId}")
-    public void removeProjectMember(@PathVariable Integer projectId, @PathVariable Integer memberId) {
-        taskService.removeProjectMember(projectId, memberId);
+    @PostMapping("/projects/{projectId}/members/{memberId}/sprints")
+    public SprintDTO createSprint(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @RequestBody SprintCreateBody createBody
+    ) {
+        return taskService.createSprint(memberId, projectId, createBody);
     }
 
-    @GetMapping("/projects/{projectId}/members")
-    public List<MemberDTO> getProjectMembers(@PathVariable Integer projectId) {
-        return taskService.getProjectMembers(projectId);
+    @PutMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}")
+    public SprintDTO updateSprint(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @PathVariable Integer sprintId,
+        @RequestBody SprintUpdateBody updateBody
+    ) {
+        return taskService.updateSprint(memberId, projectId, sprintId, updateBody);
     }
+
+    @DeleteMapping("/projects/{projectId}/members/{memberId}/sprints/{sprintId}")
+    public void deleteSprint(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId,
+        @PathVariable Integer sprintId
+    ) {
+        taskService.deleteSprint(memberId, projectId, sprintId);
+    }
+
+
 }
