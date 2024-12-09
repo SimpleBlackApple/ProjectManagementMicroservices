@@ -75,7 +75,7 @@ public class ProjectApplicationIT {
     @Test
     @Transactional
     void testProjectLifecycle() {
-        // 1. 测试创建项���
+        // 1. 测试创建项目
         ProjectCreateBody createBody = new ProjectCreateBody();
         createBody.setName("Test Project");
         createBody.setDescription("Test Description");

@@ -173,7 +173,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId) {
-        // 验证请求���户是否是项目成员
+        // 验证请求户是否是项目成员
         validateMembership(projectId, memberId);
         
         List<ProjectMember> projectMembers = projectMemberRepository.findByProjectId(projectId);
@@ -208,9 +208,20 @@ public class ProjectServiceImpl implements ProjectService {
         for (Project project : ownedProjects) {
             List<ProjectMember> members = projectMemberRepository.findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(project.getId());
 
-            // 如���项目只有owner一个成员，直接删除项目
+            // 如果项目只有owner一个成员，删除整个项目及其相关内容
             if (members.size() <= 1) {
-                projectRepository.delete(project);
+                try {
+                    // 先删除项目相关的 sprints 和 tasks
+                    taskService.deleteProjectRelatedItems(project.getId());
+                    
+                    // 删除项目成员关系
+                    projectMemberRepository.deleteByProjectId(project.getId());
+                    
+                    // 最后删除项目
+                    projectRepository.delete(project);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to delete project: " + e.getMessage());
+                }
                 continue;
             }
 
