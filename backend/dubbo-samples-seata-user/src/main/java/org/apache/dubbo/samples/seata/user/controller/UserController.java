@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
+import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
+import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
 
 import java.util.List;
 
@@ -87,6 +89,26 @@ public class UserController {
                     .body(e.getMessage());
             }
             throw e;
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UserRegisterRequest request) {
+        try {
+            return ResponseEntity.ok(userService.register(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
+        try {
+            return ResponseEntity.ok(userService.login(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
         }
     }
 

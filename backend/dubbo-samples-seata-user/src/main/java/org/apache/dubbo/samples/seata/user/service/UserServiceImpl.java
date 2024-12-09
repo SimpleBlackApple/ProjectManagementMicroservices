@@ -14,6 +14,11 @@ import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.seata.spring.annotation.GlobalTransactional;
+import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
+import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
+import org.apache.dubbo.samples.seata.api.dto.UserLoginResponse;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,8 +33,11 @@ public class UserServiceImpl implements UserService {
     @DubboReference(check = false)
     private ProjectService projectService;
 
+    private final BCryptPasswordEncoder passwordEncoder;
+
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     @Override
@@ -98,6 +106,52 @@ public class UserServiceImpl implements UserService {
         
         // 抛出异常触发回滚
         throw new RuntimeException("Simulated error for testing rollback");
+    }
+
+    @Override
+    public UserDTO register(UserRegisterRequest request) {
+        // 检查用户名是否已存在
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+        
+        // 检查邮箱是否已存在
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        
+        // 创建新用户
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .realName(request.getRealName())
+                .createdAt(LocalDateTime.now())
+                .status("ACTIVE")
+                .build();
+        
+        User savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    @Override
+    public UserLoginResponse login(UserLoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        
+        // 验证密码
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Invalid username or password");
+        }
+        
+        // 更新最后登录时间
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+        
+        // 返回登录响应
+        UserLoginResponse response = new UserLoginResponse();
+        BeanUtils.copyProperties(user, response);
+        return response;
     }
 
     private UserDTO convertToDTO(User user) {
