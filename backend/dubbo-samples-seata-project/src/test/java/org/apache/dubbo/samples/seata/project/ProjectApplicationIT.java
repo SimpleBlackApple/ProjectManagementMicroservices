@@ -12,10 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional
 public class ProjectApplicationIT {
     
     private final RestTemplate restTemplate;
@@ -64,16 +65,17 @@ public class ProjectApplicationIT {
     void tearDown() {
         // 清理创建的测试用户
         if (ownerUserId != null) {
-            restTemplate.delete(USER_API_BASE_URL + "/{id}", ownerUserId);
+            restTemplate.delete(USER_API_BASE_URL + "/{id}/force", ownerUserId);
         }
         if (memberUserId != null) {
-            restTemplate.delete(USER_API_BASE_URL + "/{id}", memberUserId);
+            restTemplate.delete(USER_API_BASE_URL + "/{id}/force", memberUserId);
         }
     }
 
     @Test
+    @Transactional
     void testProjectLifecycle() {
-        // 1. 测试创建项目
+        // 1. 测试创建项���
         ProjectCreateBody createBody = new ProjectCreateBody();
         createBody.setName("Test Project");
         createBody.setDescription("Test Description");
@@ -113,6 +115,7 @@ public class ProjectApplicationIT {
     }
 
     @Test
+    @Transactional
     void testProjectAccessControl() {
         // 1. 创建测试项目
         ProjectCreateBody createBody = new ProjectCreateBody();
@@ -131,5 +134,59 @@ public class ProjectApplicationIT {
         assertThrows(RuntimeException.class, () ->
             projectService.addMember(memberUserId, project.getId(), memberUserId)
         );
+    }
+    @Test
+    @Transactional
+    void testDeleteProject() {
+        // 1. 创建测试项目
+        ProjectCreateBody createBody = new ProjectCreateBody();
+        createBody.setName("Project To Delete");
+        ProjectDTO project = projectService.createProject(ownerUserId, createBody);
+
+        // 2. 验证项目创建成功
+        assertNotNull(project);
+
+        // 3. 删除项目
+        assertDoesNotThrow(() ->
+                projectService.deleteProject(ownerUserId, project.getId())
+        );
+
+        // 4. 验证项目已被删除
+        assertThrows(RuntimeException.class, () ->
+                projectService.getProject(ownerUserId, project.getId())
+        );
+    }
+
+    @Test
+    void testDeleteProjectRollback() {
+        // 1. 创建测试项目
+        ProjectCreateBody createBody = new ProjectCreateBody();
+        createBody.setName("Project For Rollback Test");
+        createBody.setDescription("Test Description");
+        ProjectDTO project = projectService.createProject(ownerUserId, createBody);
+        
+        // 2. 验证项目创建成功
+        assertNotNull(project);
+        assertEquals("Project For Rollback Test", project.getName());
+        assertEquals(ownerUserId, project.getOwnerId());
+        
+        // 3. 添加一个成员，以便测试成员关系的回滚
+        projectService.addMember(ownerUserId, project.getId(), memberUserId);
+        
+        // 4. 尝试删除项目并触发回滚
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            projectService.deleteProjectRollback(ownerUserId, project.getId())
+        );
+        assertTrue(exception.getMessage().contains("Simulated error"));
+        
+        // 5. 验证项目仍然存在（回滚成功）
+        ProjectDTO existingProject = projectService.getProject(ownerUserId, project.getId());
+        assertNotNull(existingProject);
+        assertEquals(project.getId(), existingProject.getId());
+        
+        // 6. 验证项目成员关系仍然存在（回滚成功）
+        List<MemberDTO> members = projectService.getProjectMembers(ownerUserId, project.getId());
+        assertFalse(members.isEmpty());
+        assertTrue(members.stream().anyMatch(m -> m.getUserId().equals(memberUserId)));
     }
 } 

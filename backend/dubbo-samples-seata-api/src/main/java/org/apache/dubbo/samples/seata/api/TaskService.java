@@ -19,4 +19,6 @@ public interface TaskService {
     TaskDTO updateTask(Integer memberId, Integer taskId, TaskUpdateBody updateBody);
     void deleteTask(Integer memberId, Integer taskId);
 
+    // 添加删除项目相关的所有 sprints 和 tasks 的方法
+    void deleteProjectRelatedItems(Integer projectId);
 } 

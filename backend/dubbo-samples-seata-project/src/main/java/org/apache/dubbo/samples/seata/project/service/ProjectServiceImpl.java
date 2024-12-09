@@ -4,6 +4,7 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.dubbo.samples.seata.api.ProjectService;
 import org.apache.dubbo.samples.seata.api.UserService;
+import org.apache.dubbo.samples.seata.api.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.apache.dubbo.samples.seata.project.entity.Project;
 import org.apache.dubbo.samples.seata.project.entity.ProjectMember;
@@ -34,6 +35,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @DubboReference(check = false)
     private UserService userService;
+
+    @DubboReference(check = false)
+    private TaskService taskService;
 
     private void validateMembership(Integer projectId, Integer userId) {
         if (!projectMemberRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, userId)) {
@@ -78,15 +82,32 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @GlobalTransactional
     public void deleteProject(Integer memberId, Integer projectId) {
-        Project project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new RuntimeException("Project not found"));
-        
-        // 验证用户是否是项目所有者
-        if (!project.getOwnerId().equals(memberId)) {
-            throw new RuntimeException("Only project owner can delete the project");
+        try {
+            Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+            
+            // 验证用户是否是项目所有者
+            if (!project.getOwnerId().equals(memberId)) {
+                throw new RuntimeException("Only project owner can delete the project");
+            }
+            
+            // 先删除项目相关的 sprints 和 tasks
+            taskService.deleteProjectRelatedItems(projectId);
+            
+            // 删除项目成员关系
+            projectMemberRepository.deleteByProjectId(projectId);
+            
+            // 最后删除项目
+            projectRepository.deleteById(projectId);
+        } catch (Exception e) {
+            // 添加更详细的错误信息
+            String errorMessage = String.format(
+                "Failed to delete project %d: %s", 
+                projectId, 
+                e.getMessage()
+            );
+            throw new RuntimeException(errorMessage);
         }
-        
-        projectRepository.deleteById(projectId);
     }
 
     @Override
@@ -152,7 +173,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId) {
-        // 验证请求用户是否是项目成员
+        // 验证请求���户是否是项目成员
         validateMembership(projectId, memberId);
         
         List<ProjectMember> projectMembers = projectMemberRepository.findByProjectId(projectId);
@@ -172,7 +193,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
         
-        // 验证用户是否是项目成���
+        // 验证用户是否是项目成员
         validateMembership(projectId, memberId);
         
         return convertToProjectDTO(project);
@@ -187,7 +208,7 @@ public class ProjectServiceImpl implements ProjectService {
         for (Project project : ownedProjects) {
             List<ProjectMember> members = projectMemberRepository.findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(project.getId());
 
-            // 如果项目只有owner一个成员，直接删除项目
+            // 如���项目只有owner一个成员，直接删除项目
             if (members.size() <= 1) {
                 projectRepository.delete(project);
                 continue;
@@ -215,6 +236,39 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public boolean isUserProjectOwner(Integer userId) {
         return !projectRepository.findByOwnerId(userId).isEmpty();
+    }
+
+    @Override
+    @GlobalTransactional
+    public void deleteProjectRollback(Integer memberId, Integer projectId) {
+        try {
+            Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+            
+            // 验证用户是否是项目所有者
+            if (!project.getOwnerId().equals(memberId)) {
+                throw new RuntimeException("Only project owner can delete the project");
+            }
+            
+            // 先删除项目相关的 sprints 和 tasks
+            taskService.deleteProjectRelatedItems(projectId);
+            
+            // 删除项目成员关系
+            projectMemberRepository.deleteByProjectId(projectId);
+            
+            // 最后删除项目
+            projectRepository.deleteById(projectId);
+            
+            // 抛出异常触发回滚
+            throw new RuntimeException("Simulated error for testing rollback");
+        } catch (Exception e) {
+            String errorMessage = String.format(
+                "Failed to delete project %d: %s", 
+                projectId, 
+                e.getMessage()
+            );
+            throw new RuntimeException(errorMessage);
+        }
     }
 
     private ProjectDTO convertToProjectDTO(Project project) {

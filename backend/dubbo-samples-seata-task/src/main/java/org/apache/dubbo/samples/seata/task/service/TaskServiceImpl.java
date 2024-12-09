@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 @DubboService
 @Service
+@Transactional
 public class TaskServiceImpl implements TaskService {
 
     @Resource
@@ -309,6 +310,23 @@ public class TaskServiceImpl implements TaskService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @GlobalTransactional
+    public void deleteProjectRelatedItems(Integer projectId) {
+        try {
+            // 获取项目的所有 sprints
+            List<Sprint> sprints = sprintRepository.findByProjectId(projectId);
+            
+            // 删除所有相关的 tasks
+            taskRepository.deleteByProjectId(projectId);
+            
+            // 删除所有相关的 sprints
+            sprintRepository.deleteByProjectId(projectId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete project related items: " + e.getMessage());
+        }
     }
 
     // 辅助方法
