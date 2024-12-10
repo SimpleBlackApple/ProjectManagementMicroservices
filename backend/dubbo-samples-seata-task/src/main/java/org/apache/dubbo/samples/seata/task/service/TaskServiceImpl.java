@@ -318,13 +318,15 @@ public class TaskServiceImpl implements TaskService {
         try {
             // 获取项目的所有 sprints
             List<Sprint> sprints = sprintRepository.findByProjectId(projectId);
-            
+            //System.out.println("pass1");
             // 删除所有相关的 tasks
             taskRepository.deleteByProjectId(projectId);
-            
+            //System.out.println("pass2");
             // 删除所有相关的 sprints
             sprintRepository.deleteByProjectId(projectId);
+            //System.out.println("pass3");
         } catch (Exception e) {
+            //System.out.println("error");
             throw new RuntimeException("Failed to delete project related items: " + e.getMessage());
         }
     }
