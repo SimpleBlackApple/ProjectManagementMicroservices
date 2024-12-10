@@ -64,10 +64,6 @@
 
     <modules>
         <module>dubbo-samples-seata-api</module>
-        <module>dubbo-samples-seata-account</module>
-        <module>dubbo-samples-seata-stock</module>
-        <module>dubbo-samples-seata-order</module>
-        <module>dubbo-samples-seata-business</module>
         <module>dubbo-samples-seata-user</module>
         <module>dubbo-samples-seata-project</module>
         <module>dubbo-samples-seata-task</module>
