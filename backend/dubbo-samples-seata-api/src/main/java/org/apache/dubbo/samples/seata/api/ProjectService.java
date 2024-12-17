@@ -15,4 +15,5 @@ public interface ProjectService {
     ProjectDTO getProject(Integer memberId, Integer projectId);
     void handleUserDeletion(Integer userId);
     boolean isUserProjectOwner(Integer userId);
+    void deleteProjectRollback(Integer memberId, Integer projectId);
 } 

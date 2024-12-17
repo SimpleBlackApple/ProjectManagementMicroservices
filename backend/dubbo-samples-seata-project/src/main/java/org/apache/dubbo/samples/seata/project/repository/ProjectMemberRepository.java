@@ -12,4 +12,5 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, In
     List<ProjectMember> findByUserIdAndDeletedFalseOrderByJoinedAtAsc(Integer userId);
     List<ProjectMember> findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(Integer projectId);
     boolean existsByProjectIdAndUserIdAndDeletedFalse(Integer projectId, Integer userId);
+    void deleteByProjectId(Integer projectId);
 }

@@ -55,13 +55,7 @@ public class ProjectController {
         return projectService.updateProject(memberId, projectId, updateBody);
     }
 
-    @DeleteMapping("/{memberId}/{projectId}")
-    public void deleteProject(
-        @PathVariable Integer memberId,
-        @PathVariable Integer projectId
-    ) {
-        projectService.deleteProject(memberId, projectId);
-    }
+
 
     @PostMapping("/{ownerId}/{projectId}/members/{newUserId}")
     public ProjectDTO addMember(
@@ -87,6 +81,28 @@ public class ProjectController {
             @PathVariable Integer projectId
     ) {
         return projectService.getProjectMembers(memberId, projectId);
+    }
+
+    @DeleteMapping("/{memberId}/{projectId}")
+    public ResponseEntity<?> deleteProject(
+        @PathVariable Integer memberId,
+        @PathVariable Integer projectId
+    ) {
+        try {
+            projectService.deleteProject(memberId, projectId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Project not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+            }
+            if (e.getMessage().contains("Only project owner")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(e.getMessage());
+        }
     }
 
     @ExceptionHandler(RuntimeException.class)
