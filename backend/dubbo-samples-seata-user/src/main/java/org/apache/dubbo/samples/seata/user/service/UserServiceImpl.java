@@ -3,7 +3,6 @@ package org.apache.dubbo.samples.seata.user.service;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.dubbo.samples.seata.api.ProjectService;
-import org.apache.dubbo.samples.seata.api.dto.UserCreateBody;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
 import org.apache.dubbo.samples.seata.user.entity.User;
 import org.apache.dubbo.samples.seata.user.repository.UserRepository;
@@ -14,11 +13,7 @@ import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.seata.spring.annotation.GlobalTransactional;
-import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
-import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
-import org.apache.dubbo.samples.seata.api.dto.UserLoginResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,9 +30,12 @@ public class UserServiceImpl implements UserService {
 
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    private final JwtService jwtService;
+
+    public UserServiceImpl(UserRepository userRepository, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -51,8 +49,28 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(Integer userId, UserUpdateBody userUpdateBody) {
         return userRepository.findById(userId)
                 .map(user -> {
+                    // 检查是否修改了邮箱
+                    boolean needNewToken = userUpdateBody.getEmail() != null && !userUpdateBody.getEmail().equals(user.getEmail());
+
+                    // 检查是否修改了密码
+                    if (userUpdateBody.getPassword() != null && !userUpdateBody.getPassword().isEmpty()) {
+                        userUpdateBody.setPassword(passwordEncoder.encode(userUpdateBody.getPassword()));
+                        needNewToken = true;
+                    }
+
+                    // 更新用户信息
                     BeanCopyUtils.copyNonNullProperties(userUpdateBody, user);
-                    return convertToDTO(userRepository.save(user));
+                    User savedUser = userRepository.save(user);
+                    UserDTO userDTO = convertToDTO(savedUser);
+
+                    // 如果需要，生成新的token
+                    if (needNewToken) {
+                        String newToken = jwtService.generateToken(savedUser);
+                        userDTO.setNewToken(newToken);
+                        userDTO.setExpiresIn(jwtService.getExpirationTime());
+                    }
+
+                    return userDTO;
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -89,7 +107,7 @@ public class UserServiceImpl implements UserService {
         // 删除用户数据
         userRepository.delete(user);
         
-        // 抛出异常触发回滚
+        // ���出异常触发回滚
         throw new RuntimeException("Simulated error for testing rollback");
     }
 

@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.awt.desktop.UserSessionListener;
-
 @RequestMapping("api/auth")
 @RestController
 public class AuthenticationController {
@@ -34,6 +32,11 @@ public class AuthenticationController {
 
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(registeredUser, userDTO);
+        
+        // 生成token并设置相关信息
+        String jwtToken = jwtService.generateToken(registeredUser);
+        userDTO.setNewToken(jwtToken);
+        userDTO.setExpiresIn(jwtService.getExpirationTime());
 
         return ResponseEntity.ok(userDTO);
     }

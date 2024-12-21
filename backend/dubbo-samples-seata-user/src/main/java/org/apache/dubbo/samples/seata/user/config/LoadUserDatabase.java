@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 
 import org.apache.dubbo.samples.seata.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
+
 @Configuration
 public class LoadUserDatabase {
     private static final Logger log = LoggerFactory.getLogger(LoadUserDatabase.class);
@@ -18,7 +20,9 @@ public class LoadUserDatabase {
         return args -> {
             if (userRepository.count() < 1) {
                 log.info("Creating users");
-                userRepository.save(new User("tester", "tester@pm.com", "test"));
+                User user = new User("tester", "tester@example.com", "test");
+                user.setCreatedAt(LocalDateTime.now());
+                userRepository.save(user);
                 log.info("Created test user.");
             }
         };

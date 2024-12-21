@@ -3,3 +3,4 @@ target
 .vscode
 seata-server
 app-crm-minimal
+*.iml

@@ -1,6 +1,5 @@
 package org.apache.dubbo.samples.seata.user.controller;
 
-import org.apache.dubbo.samples.seata.api.dto.UserCreateBody;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
 import org.apache.dubbo.samples.seata.user.entity.User;
 import org.springframework.beans.BeanUtils;
@@ -11,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
-import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
-import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
 
 import java.util.List;
 
@@ -30,8 +27,8 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         User currentUser = (User) authentication.getPrincipal();
+
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(currentUser, userDTO);
         
@@ -43,12 +40,13 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(
-            @PathVariable("id") Integer userId,
-            @RequestBody UserUpdateBody userUpdateBody) {
+    @PutMapping
+    public ResponseEntity<?> updateUser(@RequestBody UserUpdateBody userUpdateBody) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         try {
-            return ResponseEntity.ok(userService.updateUser(userId, userUpdateBody));
+            UserDTO updatedUser = userService.updateUser(currentUser.getId(), userUpdateBody);
+            return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("User not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -58,10 +56,12 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable("id") Integer userId) {
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         try {
-            userService.deleteUser(userId, false);
+            userService.deleteUser(currentUser.getId(), false);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             if (e.getMessage().contains("Cannot delete user who owns projects")) {
@@ -76,10 +76,12 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/{id}/force")
-    public ResponseEntity<?> forceDeleteUser(@PathVariable("id") Integer userId) {
+    @DeleteMapping("/force")
+    public ResponseEntity<?> forceDeleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         try {
-            userService.deleteUser(userId, true);
+            userService.deleteUser(currentUser.getId(), true);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             if (e.getMessage().contains("User not found")) {
