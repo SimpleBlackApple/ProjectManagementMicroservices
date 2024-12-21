@@ -41,25 +41,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO getUserById(Integer userId) {
-        return userRepository.findById(userId)
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Override
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public UserDTO createUser(UserCreateBody userCreateBodyBody) {
-        User user = new User();
-        BeanUtils.copyProperties(userCreateBodyBody, user);
-        User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
     }
 
     @Override
@@ -106,52 +91,6 @@ public class UserServiceImpl implements UserService {
         
         // 抛出异常触发回滚
         throw new RuntimeException("Simulated error for testing rollback");
-    }
-
-    @Override
-    public UserDTO register(UserRegisterRequest request) {
-        // 检查用户名是否已存在
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-        
-        // 检查邮箱是否已存在
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        
-        // 创建新用户
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .realName(request.getRealName())
-                .createdAt(LocalDateTime.now())
-                .status("ACTIVE")
-                .build();
-        
-        User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
-    }
-
-    @Override
-    public UserLoginResponse login(UserLoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
-        
-        // 验证密码
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid username or password");
-        }
-        
-        // 更新最后登录时间
-        user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
-        
-        // 返回登录响应
-        UserLoginResponse response = new UserLoginResponse();
-        BeanUtils.copyProperties(user, response);
-        return response;
     }
 
     private UserDTO convertToDTO(User user) {

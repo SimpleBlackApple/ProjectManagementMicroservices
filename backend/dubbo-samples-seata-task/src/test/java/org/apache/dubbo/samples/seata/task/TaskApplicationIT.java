@@ -60,8 +60,8 @@ public class TaskApplicationIT {
             UserDTO.class
         );
 
-        ownerUserId = ownerResponse.getBody().getUserId();
-        memberUserId = memberResponse.getBody().getUserId();
+        ownerUserId = ownerResponse.getBody().getId();
+        memberUserId = memberResponse.getBody().getId();
 
         // 创建测试项目
         ProjectCreateBody projectCreateBody = new ProjectCreateBody();

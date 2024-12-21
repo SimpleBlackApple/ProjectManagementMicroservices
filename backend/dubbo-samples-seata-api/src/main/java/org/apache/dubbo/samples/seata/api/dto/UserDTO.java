@@ -8,13 +8,11 @@ import java.time.LocalDateTime;
 public class UserDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Integer userId;
-    private String username;
+    private Integer id;
+    private String name;
     private String email;
-    private String realName;
     private String profilePhoto;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
-    private String status;
 }
 

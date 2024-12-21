@@ -4,9 +4,6 @@ import lombok.Data;
 
 @Data
 public class UserLoginResponse {
-    private Integer userId;
-    private String username;
-    private String email;
-    private String realName;
-    private String status;
+    private String token;
+    private long expiresIn;
 } 

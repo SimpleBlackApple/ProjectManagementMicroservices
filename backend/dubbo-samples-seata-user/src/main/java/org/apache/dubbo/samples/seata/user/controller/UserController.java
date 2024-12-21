@@ -2,8 +2,12 @@ package org.apache.dubbo.samples.seata.user.controller;
 
 import org.apache.dubbo.samples.seata.api.dto.UserCreateBody;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
+import org.apache.dubbo.samples.seata.user.entity.User;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
@@ -23,27 +27,20 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable("id") Integer userId) {
-        try {
-            return ResponseEntity.ok(userService.getUserById(userId));
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("User not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-            }
-            throw e;
-        }
+    @GetMapping("/me")
+    public ResponseEntity<?> getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        User currentUser = (User) authentication.getPrincipal();
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(currentUser, userDTO);
+        
+        return ResponseEntity.ok(userDTO);
     }
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserCreateBody userCreateBody) {
-        return ResponseEntity.ok(userService.createUser(userCreateBody));
     }
 
     @PutMapping("/{id}")
@@ -90,26 +87,6 @@ public class UserController {
                     .body(e.getMessage());
             }
             throw e;
-        }
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegisterRequest request) {
-        try {
-            return ResponseEntity.ok(userService.register(request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
-        try {
-            return ResponseEntity.ok(userService.login(request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getMessage());
         }
     }
 

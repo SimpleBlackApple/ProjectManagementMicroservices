@@ -4,6 +4,11 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Getter
 @Setter
@@ -11,30 +16,58 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "pm_user")
-public class User {
+@Table(name = "users")
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userId;
+    private Integer id;
     
-    @Column(unique = true, nullable = false)
-    private String username;
+    @Column(nullable = false)
+    private String name;
     
     @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
-    private String passwordHash;
+    private String password;
 
-    private String realName;
     private String profilePhoto;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
-    private String status;
 
-    public User(String username, String email, String password) {
-        this.username = username;
+    public User(String name, String email, String password) {
+        this.name = name;
         this.email = email;
-        this.passwordHash = password;
+        this.password = password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

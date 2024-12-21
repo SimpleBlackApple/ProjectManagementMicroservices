@@ -59,21 +59,21 @@ public class UserApplicationIT {
             ownerUser,
             UserDTO.class
         );
-        ownerUserId = ownerResponse.getBody().getUserId();
+        ownerUserId = ownerResponse.getBody().getId();
 
         ResponseEntity<UserDTO> member1Response = restTemplate.postForEntity(
             USER_API_BASE_URL,
             member1User,
             UserDTO.class
         );
-        member1UserId = member1Response.getBody().getUserId();
+        member1UserId = member1Response.getBody().getId();
 
         ResponseEntity<UserDTO> member2Response = restTemplate.postForEntity(
             USER_API_BASE_URL,
             member2User,
             UserDTO.class
         );
-        member2UserId = member2Response.getBody().getUserId();
+        member2UserId = member2Response.getBody().getId();
         
         // 创建测试项目
         ProjectCreateBody projectCreateBody = new ProjectCreateBody();
@@ -290,8 +290,8 @@ public class UserApplicationIT {
         // 3. 验证由于事务回滚，所有数据应该保持不变
         UserDTO ownerUserAfter = userService.getUserById(ownerUserId);
         assertNotNull(ownerUserAfter);
-        assertEquals(ownerUserBefore.getUserId(), ownerUserAfter.getUserId());
-        assertEquals(ownerUserBefore.getUsername(), ownerUserAfter.getUsername());
+        assertEquals(ownerUserBefore.getId(), ownerUserAfter.getId());
+        assertEquals(ownerUserBefore.getName(), ownerUserAfter.getName());
         
         // 验证项目所有权未变
         ResponseEntity<ProjectDTO> afterProjectResponse = restTemplate.getForEntity(

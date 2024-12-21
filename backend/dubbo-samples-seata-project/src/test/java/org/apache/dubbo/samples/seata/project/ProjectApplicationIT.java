@@ -57,8 +57,8 @@ public class ProjectApplicationIT {
             UserDTO.class
         );
 
-        ownerUserId = ownerResponse.getBody().getUserId();
-        memberUserId = memberResponse.getBody().getUserId();
+        ownerUserId = ownerResponse.getBody().getId();
+        memberUserId = memberResponse.getBody().getId();
     }
 
     @AfterEach
