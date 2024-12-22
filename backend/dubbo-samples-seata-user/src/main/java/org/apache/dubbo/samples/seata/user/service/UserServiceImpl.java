@@ -87,11 +87,16 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Cannot delete user who owns projects. Use force delete if needed.");
         }
 
-        // 处理项目相关的数据
-        projectService.handleUserDeletion(userId);
-
-        // 删除用户数据
-        userRepository.delete(user);
+        try {
+            // 先处理项目相关的数据
+            projectService.handleUserDeletion(userId);
+            // 删除项目服务中的用户数据
+            projectService.removeUserData(userId);
+            // 最后删除用户数据
+            userRepository.delete(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete user: " + e.getMessage());
+        }
     }
 
     @Override
@@ -107,7 +112,7 @@ public class UserServiceImpl implements UserService {
         // 删除用户数据
         userRepository.delete(user);
         
-        // ���出异常触发回滚
+        // 出异常触发回滚
         throw new RuntimeException("Simulated error for testing rollback");
     }
 

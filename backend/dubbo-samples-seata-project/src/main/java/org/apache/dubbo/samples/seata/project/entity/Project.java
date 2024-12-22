@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -25,20 +26,35 @@ public class Project {
     private String description;
     private String status;
     private LocalDateTime createdAt;
-    private Integer ownerId;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProjectMember> projectMembers = new HashSet<>();
 
-    public void addMember(Integer userId) {
+    public void setOwner(UserDetails owner) {
+        this.owner = (User) owner;
+    }
+
+    public void addMember(UserDetails user) {
+        // 检查是否已经是成员
+        boolean isMember = this.projectMembers.stream()
+                .anyMatch(member -> member.getUser().equals(user) && !member.isDeleted());
+        
+        if (isMember) {
+            throw new RuntimeException("User is already a member of this project");
+        }
+        
         ProjectMember projectMember = new ProjectMember();
         projectMember.setProject(this);
-        projectMember.setUserId(userId);
+        projectMember.setUser((User) user);
         projectMember.setJoinedAt(LocalDateTime.now());
         this.projectMembers.add(projectMember);
     }
 
-    public void removeMember(Integer userId) {
-        this.projectMembers.removeIf(member -> member.getUserId().equals(userId));
+    public void removeMember(UserDetails user) {
+        this.projectMembers.removeIf(member -> member.getUser().equals(user));
     }
 }

@@ -1,19 +1,24 @@
 package org.apache.dubbo.samples.seata.api;
 
 import org.apache.dubbo.samples.seata.api.dto.*;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.List;
 
 public interface ProjectService {
-    List<ProjectDTO> getProjectByOwnerId(Integer ownerId);
-    List<ProjectDTO> getAllProjects();
-    ProjectDTO createProject(Integer ownerId, ProjectCreateBody createBody);
-    ProjectDTO updateProject(Integer memberId, Integer projectId, ProjectUpdateBody updateBody);
-    void deleteProject(Integer memberId, Integer projectId);
-    ProjectDTO addMember(Integer ownerId, Integer projectId, Integer newUserId);
-    void removeMember(Integer ownerId, Integer projectId, Integer memberId);
-    List<MemberDTO> getProjectMembers(Integer memberId, Integer projectId);
-    ProjectDTO getProject(Integer memberId, Integer projectId);
+    List<ProjectDTO> getProjectByOwner(UserDetails owner);
+    List<ProjectDTO> getAllProjects(UserDetails user);
+    ProjectDTO createProject(UserDetails owner, ProjectCreateBody createBody);
+    ProjectDTO updateProject(UserDetails user, Integer projectId, ProjectUpdateBody updateBody);
+    void deleteProject(UserDetails user, Integer projectId);
+    ProjectDTO addMember(UserDetails owner, Integer projectId, Integer newUserId);
+    void removeMember(UserDetails owner, Integer projectId, Integer memberId);
+    List<MemberDTO> getProjectMembers(UserDetails user, Integer projectId);
+    ProjectDTO getProject(UserDetails user, Integer projectId);
     void handleUserDeletion(Integer userId);
     boolean isUserProjectOwner(Integer userId);
-    void deleteProjectRollback(Integer memberId, Integer projectId);
+    void deleteProjectRollback(UserDetails user, Integer projectId);
+    void syncNewUser(Integer userId, String email);
+    void removeUserData(Integer userId);
+    ProjectDTO transferOwnership(UserDetails currentOwner, Integer projectId, Integer newOwnerId);
 } 
