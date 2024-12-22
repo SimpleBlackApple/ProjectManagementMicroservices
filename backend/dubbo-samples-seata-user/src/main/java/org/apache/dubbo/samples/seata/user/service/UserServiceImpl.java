@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.apache.dubbo.samples.seata.user.exception.UserOperationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,9 +50,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(Integer userId, UserUpdateBody userUpdateBody) {
         return userRepository.findById(userId)
                 .map(user -> {
-                    // 检查是否修改了邮箱
-                    boolean needNewToken = userUpdateBody.getEmail() != null && !userUpdateBody.getEmail().equals(user.getEmail());
-
+                    boolean needNewToken = false;
                     // 检查是否修改了密码
                     if (userUpdateBody.getPassword() != null && !userUpdateBody.getPassword().isEmpty()) {
                         userUpdateBody.setPassword(passwordEncoder.encode(userUpdateBody.getPassword()));
@@ -72,7 +71,7 @@ public class UserServiceImpl implements UserService {
 
                     return userDTO;
                 })
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserOperationException("User not found", "USER_NOT_FOUND"));
     }
 
     @Override
@@ -80,11 +79,14 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Integer userId, boolean force) {
         // 检查用户是否存在
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserOperationException("User not found", "USER_NOT_FOUND"));
 
         // 如果不是强制删除，检查用户是否是项目所有者
         if (!force && projectService.isUserProjectOwner(userId)) {
-            throw new RuntimeException("Cannot delete user who owns projects. Use force delete if needed.");
+            throw new UserOperationException(
+                "Cannot delete user who owns projects. Use force delete if needed.",
+                "USER_OWNS_PROJECTS"
+            );
         }
 
         try {
@@ -95,7 +97,10 @@ public class UserServiceImpl implements UserService {
             // 最后删除用户数据
             userRepository.delete(user);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to delete user: " + e.getMessage());
+            throw new UserOperationException(
+                "Failed to delete user: " + e.getMessage(),
+                "DELETE_USER_FAILED"
+            );
         }
     }
 

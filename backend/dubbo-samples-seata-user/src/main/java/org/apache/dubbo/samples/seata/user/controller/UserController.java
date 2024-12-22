@@ -10,6 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.apache.dubbo.samples.seata.api.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
+import org.apache.dubbo.samples.seata.user.exception.UserOperationException;
+import org.apache.dubbo.samples.seata.user.dto.ErrorResponse;
 
 import java.util.List;
 
@@ -47,12 +49,14 @@ public class UserController {
         try {
             UserDTO updatedUser = userService.updateUser(currentUser.getId(), userUpdateBody);
             return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("User not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-            }
-            throw e;
+        } catch (UserOperationException e) {
+            HttpStatus status = switch (e.getErrorCode()) {
+                case "USER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+                default -> HttpStatus.BAD_REQUEST;
+            };
+            return ResponseEntity
+                .status(status)
+                .body(new ErrorResponse(e.getErrorCode(), e.getMessage()));
         }
     }
 
@@ -63,16 +67,15 @@ public class UserController {
         try {
             userService.deleteUser(currentUser.getId(), false);
             return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("Cannot delete user who owns projects")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(e.getMessage());
-            }
-            if (e.getMessage().contains("User not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-            }
-            throw e;
+        } catch (UserOperationException e) {
+            HttpStatus status = switch (e.getErrorCode()) {
+                case "USER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+                case "USER_OWNS_PROJECTS" -> HttpStatus.FORBIDDEN;
+                default -> HttpStatus.INTERNAL_SERVER_ERROR;
+            };
+            return ResponseEntity
+                .status(status)
+                .body(new ErrorResponse(e.getErrorCode(), e.getMessage()));
         }
     }
 
@@ -83,18 +86,21 @@ public class UserController {
         try {
             userService.deleteUser(currentUser.getId(), true);
             return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("User not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-            }
-            throw e;
+        } catch (UserOperationException e) {
+            HttpStatus status = switch (e.getErrorCode()) {
+                case "USER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+                default -> HttpStatus.INTERNAL_SERVER_ERROR;
+            };
+            return ResponseEntity
+                .status(status)
+                .body(new ErrorResponse(e.getErrorCode(), e.getMessage()));
         }
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(e.getMessage());
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new ErrorResponse("INTERNAL_ERROR", "Internal server error"));
     }
 }
