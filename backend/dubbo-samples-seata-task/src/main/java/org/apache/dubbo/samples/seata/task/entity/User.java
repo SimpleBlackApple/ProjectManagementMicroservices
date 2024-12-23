@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.project.entity;
+package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "pj_users")
+@Table(name = "ts_users")
 public class User implements UserDetails {
     @Id
     private Integer id;
@@ -22,16 +22,14 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+//    private Set<Task> tasks = new HashSet<>();
+
     @Override
     public String getPassword() {
         return null;
     }
-
-//    @OneToMany(mappedBy = "owner")
-//    private Set<Project> ownedProjects = new HashSet<>();
-//
-//    @OneToMany(mappedBy = "user")
-//    private Set<ProjectMember> joinedProjects = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

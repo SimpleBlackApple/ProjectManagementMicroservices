@@ -205,6 +205,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @GlobalTransactional
     public ProjectDTO getProject(UserDetails user, Integer projectId) {
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -356,6 +357,22 @@ public class ProjectServiceImpl implements ProjectService {
         
         project = projectRepository.save(project);
         return convertToProjectDTO(project);
+    }
+
+    @Override
+    @GlobalTransactional
+    public boolean validateUserProject(Integer userId, Integer projectId) {
+        System.out.println("validate");
+        try {
+            // 检查项目是否存在
+            if (!projectRepository.existsById(projectId)) {
+                return false;
+            }
+            // 检查用户是否是项目成员
+            return projectMemberRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, userId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private ProjectDTO convertToProjectDTO(Project project) {

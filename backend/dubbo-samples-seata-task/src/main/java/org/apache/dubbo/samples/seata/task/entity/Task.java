@@ -1,11 +1,14 @@
 package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.Data;
+import lombok.Getter;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Getter
 @Table(name = "tasks")
 public class Task {
     @Id
@@ -24,10 +27,11 @@ public class Task {
     
     @Column(name = "project_id", nullable = false)
     private Integer projectId;
-    
-    @Column(name = "member_id", nullable = false)
-    private Integer memberId;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private User member;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;

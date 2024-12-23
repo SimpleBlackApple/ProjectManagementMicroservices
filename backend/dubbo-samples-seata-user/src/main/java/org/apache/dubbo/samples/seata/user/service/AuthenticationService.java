@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.apache.dubbo.samples.seata.api.ProjectService;
+import org.apache.dubbo.samples.seata.api.TaskService;
 import org.apache.dubbo.samples.seata.user.exception.AuthenticationException;
 
 @Service
@@ -24,6 +25,9 @@ public class AuthenticationService {
 
     @DubboReference(check = false)
     private ProjectService projectService;
+
+    @DubboReference(check = false)
+    private TaskService taskService;
 
     public AuthenticationService(
             UserRepository userRepository,
@@ -52,6 +56,7 @@ public class AuthenticationService {
         
         try {
             projectService.syncNewUser(savedUser.getId(), savedUser.getEmail());
+            taskService.syncNewUser(savedUser.getId(), savedUser.getEmail());
         } catch (Exception e) {
             throw new AuthenticationException("同步用户数据失败: " + e.getMessage(), "SYNC_FAILED");
         }

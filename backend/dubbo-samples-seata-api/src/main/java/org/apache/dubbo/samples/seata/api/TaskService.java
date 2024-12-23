@@ -1,24 +1,28 @@
 package org.apache.dubbo.samples.seata.api;
 
 import org.apache.dubbo.samples.seata.api.dto.*;
+import org.springframework.security.core.userdetails.UserDetails;
 import java.util.List;
 
 public interface TaskService {
     // Sprint 相关方法
-    SprintDTO getSprintById(Integer memberId, Integer projectId, Integer sprintId);
-    List<SprintDTO> getProjectSprints(Integer memberId, Integer projectId);
-    SprintDTO createSprint(Integer memberId, Integer projectId, SprintCreateBody createBody);
-    SprintDTO updateSprint(Integer memberId, Integer projectId, Integer sprintId, SprintUpdateBody updateBody);
-    void deleteSprint(Integer memberId, Integer projectId, Integer sprintId);
+    SprintDTO getSprintById(UserDetails user, Integer sprintId);
+    List<SprintDTO> getProjectSprints(UserDetails user, Integer projectId);
+    SprintDTO createSprint(Integer userId, Integer projectId, SprintCreateBody createBody);
+    SprintDTO updateSprint(UserDetails user, Integer sprintId, SprintUpdateBody updateBody);
+    void deleteSprint(UserDetails user, Integer sprintId);
 
     // Task 相关方法
-    TaskDTO getTaskById(Integer memberId, Integer taskId);
-    List<TaskDTO> getProjectTasks(Integer memberId, Integer projectId);
-    List<TaskDTO> getSprintTasks(Integer memberId, Integer projectId, Integer sprintId);
-    TaskDTO createTask(Integer memberId, Integer projectId, TaskCreateBody createBody);
-    TaskDTO updateTask(Integer memberId, Integer taskId, TaskUpdateBody updateBody);
-    void deleteTask(Integer memberId, Integer taskId);
+    TaskDTO getTaskById(UserDetails user, Integer taskId);
+    List<TaskDTO> getProjectTasks(UserDetails user, Integer projectId);
+    List<TaskDTO> getSprintTasks(UserDetails user, Integer projectId, Integer sprintId);
+    TaskDTO createTask(UserDetails user, Integer projectId, TaskCreateBody createBody);
+    TaskDTO updateTask(UserDetails user, Integer taskId, TaskUpdateBody updateBody);
+    void deleteTask(UserDetails user, Integer taskId);
 
-    // 添加删除项目相关的所有 sprints 和 tasks 的方法
+    // 添加删除项目相关的所有 sprints ��� tasks 的方法
     void deleteProjectRelatedItems(Integer projectId);
+
+    // 添加同步用户方法
+    void syncNewUser(Integer userId, String email);
 } 

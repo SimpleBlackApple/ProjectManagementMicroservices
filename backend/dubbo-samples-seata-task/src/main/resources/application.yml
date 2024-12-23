@@ -7,7 +7,7 @@ spring:
         driver-class-name: org.postgresql.Driver
         url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/pm_assistant
         username: ${postgresql.user:postgres}
-        password: ${postgresql.password:08310744}
+        password: ${postgresql.password:123456}
     jpa:
         hibernate:
             ddl-auto: update
@@ -15,6 +15,10 @@ spring:
         properties:
             hibernate:
                 dialect: org.hibernate.dialect.PostgreSQLDialect
+    security:
+        jwt:
+            secret-key: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
+            expiration-time: 3600000  # 1h in milliseconds
 
 dubbo:
     application:

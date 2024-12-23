@@ -21,4 +21,5 @@ public interface ProjectService {
     void syncNewUser(Integer userId, String email);
     void removeUserData(Integer userId);
     ProjectDTO transferOwnership(UserDetails currentOwner, Integer projectId, Integer newOwnerId);
+    boolean validateUserProject(Integer userId, Integer projectId);
 } 
