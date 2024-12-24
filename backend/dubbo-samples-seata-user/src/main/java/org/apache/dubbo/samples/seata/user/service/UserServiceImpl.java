@@ -2,12 +2,12 @@ package org.apache.dubbo.samples.seata.user.service;
 
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.dubbo.samples.seata.api.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.apache.dubbo.samples.seata.user.repository.UserRepository;
 import org.springframework.beans.BeanUtils;
-import org.apache.dubbo.samples.seata.api.UserService;
+import org.apache.dubbo.samples.seata.api.service.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.springframework.stereotype.Service;
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserOperationException("User not found", "USER_NOT_FOUND"));
 
         // 如果不是强制删除，检查用户是否是项目所有者
-        if (!force && projectService.isUserProjectOwner(userId)) {
+        if (!force && projectService.isUserProjectOwner(user.getEmail())) {
             throw new UserOperationException(
                 "Cannot delete user who owns projects. Use force delete if needed.",
                 "USER_OWNS_PROJECTS"
@@ -91,9 +91,9 @@ public class UserServiceImpl implements UserService {
 
         try {
             // 先处理项目相关的数据
-            projectService.handleUserDeletion(userId);
+            projectService.handleUserDeletion(user.getEmail());
             // 删除项目服务中的用户数据
-            projectService.removeUserData(userId);
+            projectService.removeUserData(user.getEmail());
             // 最后删除用户数据
             userRepository.delete(user);
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 处理项目相关的数据
-        projectService.handleUserDeletion(userId);
+        projectService.handleUserDeletion(user.getEmail());
 
         // 删除用户数据
         userRepository.delete(user);

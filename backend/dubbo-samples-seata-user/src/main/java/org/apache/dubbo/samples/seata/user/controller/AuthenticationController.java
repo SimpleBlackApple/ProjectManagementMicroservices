@@ -4,7 +4,7 @@ import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
 import org.apache.dubbo.samples.seata.api.dto.UserLoginResponse;
 import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.apache.dubbo.samples.seata.user.service.AuthenticationService;
 import org.apache.dubbo.samples.seata.user.service.JwtService;
 import org.apache.dubbo.samples.seata.user.exception.AuthenticationException;

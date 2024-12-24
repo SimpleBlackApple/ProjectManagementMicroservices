@@ -1,14 +1,14 @@
 package org.apache.dubbo.samples.seata.user.controller;
 
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.apache.dubbo.samples.seata.api.UserService;
+import org.apache.dubbo.samples.seata.api.service.UserService;
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.user.exception.UserOperationException;
 import org.apache.dubbo.samples.seata.user.dto.ErrorResponse;

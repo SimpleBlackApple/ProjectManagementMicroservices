@@ -3,6 +3,7 @@ package org.apache.dubbo.samples.seata.project.entity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.apache.dubbo.samples.seata.api.entity.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

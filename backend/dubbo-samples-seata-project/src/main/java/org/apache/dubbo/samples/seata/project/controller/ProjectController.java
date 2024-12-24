@@ -1,6 +1,6 @@
 package org.apache.dubbo.samples.seata.project.controller;
 
-import org.apache.dubbo.samples.seata.api.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,29 +22,29 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
-    private UserDetails getCurrentUser() {
+    private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (UserDetails) authentication.getPrincipal();
+        return ((UserDetails) authentication.getPrincipal()).getUsername();
     }
 
     @GetMapping("/owned")
     public List<ProjectDTO> getOwnedProjects() {
-        return projectService.getProjectByOwner(getCurrentUser());
+        return projectService.getProjectByOwner(getCurrentUserEmail());
     }
 
     @GetMapping()
     public List<ProjectDTO> getAllProjects() {
-        return projectService.getAllProjects(getCurrentUser());
+        return projectService.getAllProjects(getCurrentUserEmail());
     }
 
     @GetMapping("/{projectId}")
     public ProjectDTO getProject(@PathVariable Integer projectId) {
-        return projectService.getProject(getCurrentUser(), projectId);
+        return projectService.getProject(getCurrentUserEmail(), projectId);
     }
 
     @PostMapping
     public ProjectDTO createProject(@RequestBody ProjectCreateBody createBody) {
-        return projectService.createProject(getCurrentUser(), createBody);
+        return projectService.createProject(getCurrentUserEmail(), createBody);
     }
 
     @PutMapping("/{projectId}")
@@ -52,34 +52,34 @@ public class ProjectController {
         @PathVariable Integer projectId,
         @RequestBody ProjectUpdateBody updateBody
     ) {
-        return projectService.updateProject(getCurrentUser(), projectId, updateBody);
+        return projectService.updateProject(getCurrentUserEmail(), projectId, updateBody);
     }
 
-    @PostMapping("/{projectId}/members/{newUserId}")
+    @PostMapping("/{projectId}/members/{newUserEmail}")
     public ProjectDTO addMember(
         @PathVariable Integer projectId,
-        @PathVariable Integer newUserId
+        @PathVariable String newUserEmail
     ) {
-        return projectService.addMember(getCurrentUser(), projectId, newUserId);
+        return projectService.addMember(getCurrentUserEmail(), projectId, newUserEmail);
     }
 
-    @DeleteMapping("/{projectId}/members/{memberId}")
+    @DeleteMapping("/{projectId}/members/{memberEmail}")
     public void removeMember(
         @PathVariable Integer projectId,
-        @PathVariable Integer memberId
+        @PathVariable String memberEmail
     ) {
-        projectService.removeMember(getCurrentUser(), projectId, memberId);
+        projectService.removeMember(getCurrentUserEmail(), projectId, memberEmail);
     }
 
     @GetMapping("/{projectId}/members")
     public List<MemberDTO> getProjectMembers(@PathVariable Integer projectId) {
-        return projectService.getProjectMembers(getCurrentUser(), projectId);
+        return projectService.getProjectMembers(getCurrentUserEmail(), projectId);
     }
 
     @DeleteMapping("/{projectId}")
     public ResponseEntity<?> deleteProject(@PathVariable Integer projectId) {
         try {
-            projectService.deleteProject(getCurrentUser(), projectId);
+            projectService.deleteProject(getCurrentUserEmail(), projectId);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             if (e.getMessage().contains("Project not found")) {
@@ -95,12 +95,12 @@ public class ProjectController {
         }
     }
 
-    @PostMapping("/{projectId}/transfer-ownership/{newOwnerId}")
+    @PostMapping("/{projectId}/transfer-ownership/{newOwnerEmail}")
     public ProjectDTO transferOwnership(
         @PathVariable Integer projectId,
-        @PathVariable Integer newOwnerId
+        @PathVariable String newOwnerEmail
     ) {
-        return projectService.transferOwnership(getCurrentUser(), projectId, newOwnerId);
+        return projectService.transferOwnership(getCurrentUserEmail(), projectId, newOwnerEmail);
     }
 
     @ExceptionHandler(RuntimeException.class)

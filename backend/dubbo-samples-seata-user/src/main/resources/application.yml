@@ -18,7 +18,7 @@ spring:
         name: UserApplication
     datasource:
         driver-class-name: org.postgresql.Driver
-        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/pm_assistant
+        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/user
         username: ${postgresql.user:postgres}
         password: ${postgresql.password:123456}
     jpa:
@@ -45,6 +45,8 @@ dubbo:
     protocol:
         name: dubbo
         port: 20890
+    consumer:
+        filter: -authenticationPrepare
 
 seata:
     enabled: true

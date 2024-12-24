@@ -1,6 +1,6 @@
 package org.apache.dubbo.samples.seata.user.config;
 
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;

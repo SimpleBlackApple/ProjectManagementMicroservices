@@ -1,6 +1,6 @@
 package org.apache.dubbo.samples.seata.project;
 
-import org.apache.dubbo.samples.seata.api.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.ProjectService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

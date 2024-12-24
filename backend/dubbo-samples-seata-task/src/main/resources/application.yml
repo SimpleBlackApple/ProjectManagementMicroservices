@@ -5,7 +5,7 @@ spring:
         name: TaskApplication
     datasource:
         driver-class-name: org.postgresql.Driver
-        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/pm_assistant
+        url: jdbc:postgresql://${postgresql.address:localhost}:${postgresql.port:5432}/task
         username: ${postgresql.user:postgres}
         password: ${postgresql.password:123456}
     jpa:
@@ -30,6 +30,9 @@ dubbo:
     protocol:
         name: dubbo
         port: 20893
+    consumer:
+        filter: -authenticationPrepare
+
 seata:
     enabled: true
     application-id: dubbo-samples-seata

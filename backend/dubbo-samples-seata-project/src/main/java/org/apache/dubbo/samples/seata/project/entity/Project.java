@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;

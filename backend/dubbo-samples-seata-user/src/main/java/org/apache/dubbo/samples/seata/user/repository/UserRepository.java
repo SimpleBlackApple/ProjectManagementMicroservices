@@ -1,6 +1,6 @@
 package org.apache.dubbo.samples.seata.user.repository;
 
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

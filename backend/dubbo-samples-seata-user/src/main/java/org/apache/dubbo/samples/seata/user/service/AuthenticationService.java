@@ -2,7 +2,7 @@ package org.apache.dubbo.samples.seata.user.service;
 
 import org.apache.dubbo.samples.seata.api.dto.UserLoginRequest;
 import org.apache.dubbo.samples.seata.api.dto.UserRegisterRequest;
-import org.apache.dubbo.samples.seata.user.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.apache.dubbo.samples.seata.user.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.seata.spring.annotation.GlobalTransactional;
-import org.apache.dubbo.samples.seata.api.ProjectService;
-import org.apache.dubbo.samples.seata.api.TaskService;
+import org.apache.dubbo.samples.seata.api.service.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.TaskService;
 import org.apache.dubbo.samples.seata.user.exception.AuthenticationException;
 
 @Service
@@ -55,8 +55,8 @@ public class AuthenticationService {
         User savedUser = userRepository.save(user);
         
         try {
-            projectService.syncNewUser(savedUser.getId(), savedUser.getEmail());
-            taskService.syncNewUser(savedUser.getId(), savedUser.getEmail());
+            projectService.syncNewUser(savedUser.getId(), savedUser.getName(), savedUser.getEmail(), savedUser.getPassword());
+            taskService.syncNewUser(savedUser.getId(), savedUser.getName(), savedUser.getEmail(), savedUser.getPassword());
         } catch (Exception e) {
             throw new AuthenticationException("同步用户数据失败: " + e.getMessage(), "SYNC_FAILED");
         }

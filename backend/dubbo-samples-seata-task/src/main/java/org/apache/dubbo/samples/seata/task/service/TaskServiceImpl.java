@@ -1,12 +1,12 @@
 package org.apache.dubbo.samples.seata.task.service;
 
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.dubbo.samples.seata.api.ProjectService;
-import org.apache.dubbo.samples.seata.api.TaskService;
+import org.apache.dubbo.samples.seata.api.service.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.apache.dubbo.samples.seata.task.entity.Task;
 import org.apache.dubbo.samples.seata.task.entity.Sprint;
-import org.apache.dubbo.samples.seata.task.entity.User;
+import org.apache.dubbo.samples.seata.api.entity.User;
 import org.apache.dubbo.samples.seata.task.repository.TaskRepository;
 import org.apache.dubbo.samples.seata.task.repository.SprintRepository;
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
@@ -17,12 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.seata.spring.annotation.GlobalTransactional;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
 
 @DubboService
 @Service
@@ -40,15 +40,18 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private UserRepository userRepository;
 
+    @Resource
+    private EntityManager entityManager;
+
     // Sprint 相关操作
     @Override
-    public SprintDTO getSprintById(UserDetails user, Integer sprintId) {
+    @GlobalTransactional
+    public SprintDTO getSprintById(String email, Integer sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
         
-        // 验证用户和项目
-        if (!projectService.validateUserProject(((User)user).getId(), sprint.getProjectId())) {
-            throw new RuntimeException("Project not found or user is not a member");
+        if (!projectService.validateUserProject(email, sprint.getProjectId())) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
         return convertToSprintDTO(sprint);
@@ -56,10 +59,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public List<SprintDTO> getProjectSprints(UserDetails user, Integer projectId) {
-        // 验证用户和项目
-        if (!projectService.validateUserProject(((User)user).getId(), projectId)) {
-            throw new RuntimeException("Project not found or user is not a member");
+    public List<SprintDTO> getProjectSprints(String email, Integer projectId) {
+        if (!projectService.validateUserProject(email, projectId)) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
         return sprintRepository.findByProjectId(projectId).stream()
@@ -69,10 +71,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional(timeoutMills = 30000)
-    public SprintDTO createSprint(Integer userId, Integer projectId, SprintCreateBody createBody) {
+    public SprintDTO createSprint(String email, Integer projectId, SprintCreateBody createBody) {
         try {
-            // 验证用户是否是项目成员
-            if (!projectService.validateUserProject(userId, projectId)) {
+            if (!projectService.validateUserProject(email, projectId)) {
                 throw new RuntimeException("Project not found or user is not a member");
             }
             
@@ -96,13 +97,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public SprintDTO updateSprint(UserDetails user, Integer sprintId, SprintUpdateBody updateBody) {
+    public SprintDTO updateSprint(String email, Integer sprintId, SprintUpdateBody updateBody) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
         
-        // 验证用户和项目
-        if (!projectService.validateUserProject(((User)user).getId(), sprint.getProjectId())) {
-            throw new RuntimeException("Project not found or user is not a member");
+        if (!projectService.validateUserProject(email, sprint.getProjectId())) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
 
         if (updateBody.getStatus() != null) {
@@ -115,13 +115,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public void deleteSprint(UserDetails user, Integer sprintId) {
+    public void deleteSprint(String email, Integer sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
         
-        // 验证用户和项目
-        if (!projectService.validateUserProject(((User)user).getId(), sprint.getProjectId())) {
-            throw new RuntimeException("Project not found or user is not a member");
+        if (!projectService.validateUserProject(email, sprint.getProjectId())) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
         sprintRepository.deleteById(sprintId);
@@ -130,12 +129,11 @@ public class TaskServiceImpl implements TaskService {
     // Task 相关操作
     @Override
     @GlobalTransactional
-    public TaskDTO getTaskById(UserDetails user, Integer taskId) {
+    public TaskDTO getTaskById(String email, Integer taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
                 
-        // 验证用户是否是项目成员
-        if (!projectService.validateUserProject(((User)user).getId(), task.getProjectId())) {
+        if (!projectService.validateUserProject(email, task.getProjectId())) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
@@ -144,50 +142,45 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public List<TaskDTO> getProjectTasks(UserDetails user, Integer projectId) {
-        // 验证用户是否是项目成员
-        if (!projectService.validateUserProject(((User)user).getId(), projectId)) {
+    public List<TaskDTO> getProjectTasks(String email, Integer projectId) {
+        if (!projectService.validateUserProject(email, projectId)) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
         List<Task> tasks = taskRepository.findByProjectId(projectId);
         return tasks.stream()
-                .map(task -> {
-                    TaskDTO dto = new TaskDTO();
-                    BeanUtils.copyProperties(task, dto);
-                    if (task.getSprint() != null) {
-                        dto.setSprintId(task.getSprint().getId());
-                    }
-                    return dto;
-                })
+                .map(this::convertToTaskDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     @GlobalTransactional
-    public TaskDTO createTask(UserDetails user, Integer projectId, TaskCreateBody createBody) {
+    public TaskDTO createTask(String email, Integer projectId, TaskCreateBody createBody) {
         try {
-            Integer userId = ((User)user).getId();
-            // 验证创建者是否是项目成员
-            if (!projectService.validateUserProject(userId, projectId)) {
-                throw new RuntimeException("Project not found or user is not a member");
+            User creator = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            if (!projectService.validateUserProject(email, projectId)) {
+                throw new RuntimeException("Access denied: user is not a member of this project");
             }
             
             // 验证指定的负责人是否是项目成员
             Integer assigneeId = createBody.getManagerId();
             if (assigneeId != null) {
-                if (!projectService.validateUserProject(assigneeId, projectId)) {
+                User assignee = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+                if (!projectService.validateUserProject(assignee.getEmail(), projectId)) {
                     throw new RuntimeException("Assigned member is not a member of this project");
                 }
             } else {
                 // 如果没有指定负责人，则设置为创建者
-                assigneeId = userId;
+                assigneeId = creator.getId();
             }
             
             Task task = new Task();
             BeanUtils.copyProperties(createBody, task);
             task.setProjectId(projectId);
-            task.setMember(userRepository.getReferenceById(assigneeId));  // 设置任务负责人
+            task.setMember(userRepository.getReferenceById(assigneeId));
             task.setStatus("TO_DO");
             task.setCreatedAt(LocalDateTime.now());
             task.setUpdatedAt(LocalDateTime.now());
@@ -203,7 +196,6 @@ public class TaskServiceImpl implements TaskService {
                 task.setSprint(sprint);
             }
             
-            // 验证日期范围
             task.validateDates();
             
             return convertToTaskDTO(taskRepository.save(task));
@@ -217,17 +209,18 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public TaskDTO updateTask(UserDetails user, Integer taskId, TaskUpdateBody updateBody) {
+    public TaskDTO updateTask(String email, Integer taskId, TaskUpdateBody updateBody) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
                 
-        // 验证用户是否是项目成员
-        if (!projectService.validateUserProject(((User)user).getId(), task.getProjectId())) {
+        if (!projectService.validateUserProject(email, task.getProjectId())) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
         // 只有任务负责人可以更新任务
-        if (!task.getMember().getId().equals(((User)user).getId())) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!task.getMember().getId().equals(user.getId())) {
             throw new RuntimeException("Only task assignee can update the task");
         }
         
@@ -243,8 +236,6 @@ public class TaskServiceImpl implements TaskService {
         
         BeanCopyUtils.copyNonNullProperties(updateBody, task);
         task.setUpdatedAt(LocalDateTime.now());
-        
-        // 验证日期范围
         task.validateDates();
         
         return convertToTaskDTO(taskRepository.save(task));
@@ -252,12 +243,11 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public void deleteTask(UserDetails user, Integer taskId) {
+    public void deleteTask(String email, Integer taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
                 
-        // 验证用户是否是项目成员
-        if (!projectService.validateUserProject(((User)user).getId(), task.getProjectId())) {
+        if (!projectService.validateUserProject(email, task.getProjectId())) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
@@ -266,9 +256,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public List<TaskDTO> getSprintTasks(UserDetails user, Integer projectId, Integer sprintId) {
-        // 验证用户是否是项目成员
-        if (!projectService.validateUserProject(((User)user).getId(), projectId)) {
+    public List<TaskDTO> getSprintTasks(String email, Integer projectId, Integer sprintId) {
+        if (!projectService.validateUserProject(email, projectId)) {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
@@ -282,12 +271,7 @@ public class TaskServiceImpl implements TaskService {
         
         List<Task> tasks = taskRepository.findBySprintId(sprintId);
         return tasks.stream()
-                .map(task -> {
-                    TaskDTO dto = new TaskDTO();
-                    BeanUtils.copyProperties(task, dto);
-                    dto.setSprintId(sprintId);
-                    return dto;
-                })
+                .map(this::convertToTaskDTO)
                 .collect(Collectors.toList());
     }
 
@@ -384,16 +368,19 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @GlobalTransactional
-    public void syncNewUser(Integer userId, String email) {
-        // 检查用户是否已存在
+    public void syncNewUser(Integer userId, String name, String email, String password) {
+        // 检查用户是否已���在
         if (userRepository.existsById(userId)) {
             throw new RuntimeException("User already exists in task service");
         }
 
-        // 创建用户最小副���
+        // 创建完整用户对象
         User user = User.builder()
                 .id(userId)
+                .name(name)
                 .email(email)
+                .password(password)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         try {

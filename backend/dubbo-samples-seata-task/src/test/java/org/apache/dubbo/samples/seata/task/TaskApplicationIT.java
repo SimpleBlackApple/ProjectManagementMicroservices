@@ -1,7 +1,6 @@
 package org.apache.dubbo.samples.seata.task;
 
-import org.apache.dubbo.samples.seata.api.TaskService;
-import org.apache.dubbo.samples.seata.api.ProjectService;
+import org.apache.dubbo.samples.seata.api.service.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

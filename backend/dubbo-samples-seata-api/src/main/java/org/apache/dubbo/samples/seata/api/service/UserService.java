@@ -1,4 +1,4 @@
-package org.apache.dubbo.samples.seata.api;
+package org.apache.dubbo.samples.seata.api.service;
 
 import org.apache.dubbo.samples.seata.api.dto.UserDTO;
 import org.apache.dubbo.samples.seata.api.dto.UserUpdateBody;

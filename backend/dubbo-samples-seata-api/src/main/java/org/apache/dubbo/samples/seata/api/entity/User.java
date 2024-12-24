@@ -1,10 +1,11 @@
-package org.apache.dubbo.samples.seata.task.entity;
+package org.apache.dubbo.samples.seata.api.entity;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,21 +15,29 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ts_users")
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    
+    @Column(nullable = false)
+    private String name;
     
     @Column(unique = true, nullable = false)
     private String email;
 
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
-//    private Set<Task> tasks = new HashSet<>();
+    @Column(nullable = false)
+    private String password;
 
-    @Override
-    public String getPassword() {
-        return null;
+    private String profilePhoto;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
+
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
     }
 
     @Override
@@ -60,4 +69,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-}
+} 
