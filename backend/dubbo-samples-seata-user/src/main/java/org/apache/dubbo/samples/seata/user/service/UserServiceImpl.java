@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.apache.dubbo.samples.seata.user.exception.UserOperationException;
+import org.apache.dubbo.samples.seata.api.service.TaskService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +29,9 @@ public class UserServiceImpl implements UserService {
 
     @DubboReference(check = false)
     private ProjectService projectService;
+
+    @DubboReference(check = false)
+    private TaskService taskService;
 
     private final BCryptPasswordEncoder passwordEncoder;
 
@@ -94,6 +98,8 @@ public class UserServiceImpl implements UserService {
             projectService.handleUserDeletion(user.getEmail());
             // 删除项目服务中的用户数据
             projectService.removeUserData(user.getEmail());
+            // 删除任务服务中的用户数据
+            taskService.removeUserData(user.getEmail());
             // 最后删除用户数据
             userRepository.delete(user);
         } catch (Exception e) {
@@ -119,6 +125,13 @@ public class UserServiceImpl implements UserService {
         
         // 出异常触发回滚
         throw new RuntimeException("Simulated error for testing rollback");
+    }
+
+    @Override
+    public UserDTO getUserById(Integer userId) {
+        return userRepository.findById(userId)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new UserOperationException("User not found", "USER_NOT_FOUND"));
     }
 
     private UserDTO convertToDTO(User user) {

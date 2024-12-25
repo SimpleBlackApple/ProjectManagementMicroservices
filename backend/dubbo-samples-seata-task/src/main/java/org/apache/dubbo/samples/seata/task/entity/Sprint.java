@@ -1,13 +1,24 @@
 package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "sprints")
+@ToString(exclude = "tasks")
+@EqualsAndHashCode(exclude = "tasks")
+@NoArgsConstructor
 public class Sprint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,21 +32,6 @@ public class Sprint {
     private LocalDateTime endDate;
     private String status;
     
-    @OneToMany(mappedBy = "sprint")
-    private Set<Task> tasks;
-    
-    @Transient
-    public Integer getTotalStoryPoints() {
-        return tasks.stream()
-            .mapToInt(Task::getStoryPoints)
-            .sum();
-    }
-    
-    @Transient
-    public Integer getCompletedStoryPoints() {
-        return tasks.stream()
-            .filter(task -> "DONE".equals(task.getStatus()))
-            .mapToInt(Task::getStoryPoints)
-            .sum();
-    }
+    @OneToMany(mappedBy = "sprint", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> tasks = new HashSet<>();
 } 

@@ -4,6 +4,7 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.dubbo.samples.seata.api.service.ProjectService;
 import org.apache.dubbo.samples.seata.api.service.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
+import org.apache.dubbo.samples.seata.api.service.UserService;
 import org.apache.dubbo.samples.seata.task.entity.Task;
 import org.apache.dubbo.samples.seata.task.entity.Sprint;
 import org.apache.dubbo.samples.seata.api.entity.User;
@@ -43,10 +44,13 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private EntityManager entityManager;
 
+    @DubboReference(check = false)
+    private UserService userService;
+
     // Sprint 相关操作
     @Override
     @GlobalTransactional
-    public SprintDTO getSprintById(String email, Integer sprintId) {
+        public SprintDTO getSprintById(String email, Integer sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
         
@@ -123,6 +127,14 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Access denied: user is not a member of this project");
         }
         
+        // 先解除所有任务的关联
+        List<Task> tasks = taskRepository.findBySprintId(sprintId);
+        for (Task task : tasks) {
+            task.setSprint(null);
+            taskRepository.save(task);
+        }
+        
+        // 删除sprint
         sprintRepository.deleteById(sprintId);
     }
 
@@ -166,21 +178,20 @@ public class TaskServiceImpl implements TaskService {
             
             // 验证指定的负责人是否是项目成员
             Integer assigneeId = createBody.getManagerId();
+            User member = creator;
             if (assigneeId != null) {
-                User assignee = userRepository.findById(assigneeId)
-                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+                UserDTO assignee = userService.getUserById(assigneeId);
                 if (!projectService.validateUserProject(assignee.getEmail(), projectId)) {
                     throw new RuntimeException("Assigned member is not a member of this project");
                 }
-            } else {
-                // 如果没有指定负责人，则设置为创建者
-                assigneeId = creator.getId();
+                member = userRepository.findByEmail(assignee.getEmail())
+                        .orElseThrow(() -> new RuntimeException("Member not found"));
             }
-            
+
             Task task = new Task();
             BeanUtils.copyProperties(createBody, task);
             task.setProjectId(projectId);
-            task.setMember(userRepository.getReferenceById(assigneeId));
+            task.setMember(member);
             task.setStatus("TO_DO");
             task.setCreatedAt(LocalDateTime.now());
             task.setUpdatedAt(LocalDateTime.now());
@@ -310,7 +321,7 @@ public class TaskServiceImpl implements TaskService {
     private SprintDTO convertToSprintDTO(Sprint sprint) {
         SprintDTO dto = new SprintDTO();
 
-        // 只复制基本属性
+        // 复制基本属性
         dto.setId(sprint.getId());
         dto.setProjectId(sprint.getProjectId());
         dto.setName(sprint.getName());
@@ -318,14 +329,19 @@ public class TaskServiceImpl implements TaskService {
         dto.setEndDate(sprint.getEndDate());
         dto.setStatus(sprint.getStatus());
         
-        // 如果需要计算故事点，确保 tasks 集合已始化
-        if (sprint.getTasks() != null) {
-            dto.setTotalStoryPoints(sprint.getTotalStoryPoints());
-            dto.setCompletedStoryPoints(sprint.getCompletedStoryPoints());
-        } else {
-            dto.setTotalStoryPoints(0);
-            dto.setCompletedStoryPoints(0);
-        }
+        // 从数据库直接查询计算故事点
+        List<Task> allTasks = taskRepository.findBySprintId(sprint.getId());
+        int totalPoints = allTasks.stream()
+            .mapToInt(Task::getStoryPoints)
+            .sum();
+        
+        List<Task> completedTasks = taskRepository.findBySprintIdAndStatus(sprint.getId(), "DONE");
+        int completedPoints = completedTasks.stream()
+            .mapToInt(Task::getStoryPoints)
+            .sum();
+        
+        dto.setTotalStoryPoints(totalPoints);
+        dto.setCompletedStoryPoints(completedPoints);
         
         return dto;
     }
@@ -369,7 +385,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @GlobalTransactional
     public void syncNewUser(Integer userId, String name, String email, String password) {
-        // 检查用户是否已���在
+        // 检查用户是否已存在
         if (userRepository.existsById(userId)) {
             throw new RuntimeException("User already exists in task service");
         }
@@ -388,5 +404,24 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to sync user in task service: " + e.getMessage());
         }
+    }
+
+    @Override
+    @GlobalTransactional
+    public void removeUserData(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found in task service"));
+
+        // 找到用户负责的所有任务
+        List<Task> userTasks = taskRepository.findByMemberId(user.getId());
+        
+        // 将这些任务的负责人设置为null
+        for (Task task : userTasks) {
+            task.setMember(null);
+            taskRepository.save(task);
+        }
+
+        // 删除用户数据
+        userRepository.delete(user);
     }
 }

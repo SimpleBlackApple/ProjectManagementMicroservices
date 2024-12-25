@@ -25,4 +25,7 @@ public interface TaskService {
 
     // 添加同步用户方法
     void syncNewUser(Integer userId, String name, String email, String password);
+
+    // 添加删除用户相关数据的方法
+    void removeUserData(String email);
 } 

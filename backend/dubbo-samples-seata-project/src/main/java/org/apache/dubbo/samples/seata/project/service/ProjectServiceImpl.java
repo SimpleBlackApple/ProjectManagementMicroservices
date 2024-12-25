@@ -241,12 +241,6 @@ public class ProjectServiceImpl implements ProjectService {
             project.setOwner(earliestMember.getUser());
             projectRepository.save(project);
         }
-
-        List<ProjectMember> memberProjects = projectMemberRepository.findByUserIdAndDeletedFalseOrderByJoinedAtAsc(userId);
-        memberProjects.forEach(member -> {
-            member.setDeleted(true);
-            projectMemberRepository.save(member);
-        });
     }
 
     @Override
@@ -313,6 +307,7 @@ public class ProjectServiceImpl implements ProjectService {
     public void removeUserData(String email) {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
+        userRepository.delete(user);
         Integer userId = user.getId();
         userRepository.findById(userId).ifPresent(u -> {
             List<ProjectMember> memberProjects = projectMemberRepository

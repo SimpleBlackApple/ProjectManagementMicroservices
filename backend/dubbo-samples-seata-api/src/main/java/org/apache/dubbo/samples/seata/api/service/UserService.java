@@ -10,4 +10,5 @@ public interface UserService {
     UserDTO updateUser(Integer userId, UserUpdateBody userUpdateBody);
     void deleteUser(Integer userId, boolean force);
     void deleteUserRollback(Integer userId);
+    UserDTO getUserById(Integer userId);
 } 

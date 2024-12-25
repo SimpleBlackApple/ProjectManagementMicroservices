@@ -1,6 +1,7 @@
 package org.apache.dubbo.samples.seata.project.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 @Table(name = "projects")
 @ToString(exclude = "projectMembers")
 @EqualsAndHashCode(exclude = "projectMembers")
+@NoArgsConstructor
 public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

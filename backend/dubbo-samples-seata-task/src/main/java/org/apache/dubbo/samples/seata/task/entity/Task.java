@@ -2,15 +2,19 @@ package org.apache.dubbo.samples.seata.task.entity;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import org.apache.dubbo.samples.seata.api.entity.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
 @Getter
+@Setter
 @Table(name = "tasks")
+@NoArgsConstructor
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +34,7 @@ public class Task {
     private Integer projectId;
 
     @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id")
     private User member;
 
     @ManyToOne(fetch = FetchType.LAZY)
