@@ -55,20 +55,20 @@ public class ProjectController {
         return projectService.updateProject(getCurrentUserEmail(), projectId, updateBody);
     }
 
-    @PostMapping("/{projectId}/members/{newUserEmail}")
+    @PostMapping("/{projectId}/members/{newUserId}")
     public ProjectDTO addMember(
         @PathVariable Integer projectId,
-        @PathVariable String newUserEmail
+        @PathVariable Integer newUserId
     ) {
-        return projectService.addMember(getCurrentUserEmail(), projectId, newUserEmail);
+        return projectService.addMember(getCurrentUserEmail(), projectId, newUserId);
     }
 
-    @DeleteMapping("/{projectId}/members/{memberEmail}")
+    @DeleteMapping("/{projectId}/members/{memberId}")
     public void removeMember(
         @PathVariable Integer projectId,
-        @PathVariable String memberEmail
+        @PathVariable Integer memberId
     ) {
-        projectService.removeMember(getCurrentUserEmail(), projectId, memberEmail);
+        projectService.removeMember(getCurrentUserEmail(), projectId, memberId);
     }
 
     @GetMapping("/{projectId}/members")
@@ -95,12 +95,12 @@ public class ProjectController {
         }
     }
 
-    @PostMapping("/{projectId}/transfer-ownership/{newOwnerEmail}")
+    @PostMapping("/{projectId}/transfer-ownership/{newOwnerId}")
     public ProjectDTO transferOwnership(
         @PathVariable Integer projectId,
-        @PathVariable String newOwnerEmail
+        @PathVariable Integer newOwnerId
     ) {
-        return projectService.transferOwnership(getCurrentUserEmail(), projectId, newOwnerEmail);
+        return projectService.transferOwnership(getCurrentUserEmail(), projectId, newOwnerId);
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -10,8 +10,8 @@ public interface ProjectService {
     ProjectDTO createProject(String email, ProjectCreateBody createBody);
     ProjectDTO updateProject(String email, Integer projectId, ProjectUpdateBody updateBody);
     void deleteProject(String email, Integer projectId);
-    ProjectDTO addMember(String email, Integer projectId, String newUserEmail);
-    void removeMember(String email, Integer projectId, String memberEmail);
+    ProjectDTO addMember(String ownerEmail, Integer projectId, Integer newUserId);
+    void removeMember(String ownerEmail, Integer projectId, Integer memberId);
     List<MemberDTO> getProjectMembers(String email, Integer projectId);
     ProjectDTO getProject(String email, Integer projectId);
     void handleUserDeletion(String email);
@@ -19,6 +19,6 @@ public interface ProjectService {
     void deleteProjectRollback(String email, Integer projectId);
     void syncNewUser(Integer userId, String name, String email, String password);
     void removeUserData(String email);
-    ProjectDTO transferOwnership(String currentOwnerEmail, Integer projectId, String newOwnerEmail);
+    ProjectDTO transferOwnership(String currentOwnerEmail, Integer projectId, Integer newOwnerId);
     boolean validateUserProject(String email, Integer projectId);
 } 

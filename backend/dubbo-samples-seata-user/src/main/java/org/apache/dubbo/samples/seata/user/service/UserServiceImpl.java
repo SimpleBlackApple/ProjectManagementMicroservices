@@ -128,6 +128,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @GlobalTransactional
     public UserDTO getUserById(Integer userId) {
         return userRepository.findById(userId)
                 .map(this::convertToDTO)

@@ -2,6 +2,7 @@ package org.apache.dubbo.samples.seata.project.service;
 
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.dubbo.samples.seata.api.service.UserService;
 import org.apache.dubbo.samples.seata.api.service.ProjectService;
 import org.apache.dubbo.samples.seata.api.service.TaskService;
 import org.apache.dubbo.samples.seata.api.dto.*;
@@ -39,6 +40,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private UserRepository userRepository;
+
+    @DubboReference(check = false)
+    private UserService userService;
 
     private void validateMembership(Integer projectId, String email) {
         User user = userRepository.findByEmail(email)
@@ -128,11 +132,23 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDTO addMember(String ownerEmail, Integer projectId, String newUserEmail) {
+    @GlobalTransactional
+    public ProjectDTO addMember(String ownerEmail, Integer projectId, Integer newUserId) {
         User owner = userRepository.findByEmail(ownerEmail)
             .orElseThrow(() -> new RuntimeException("Owner not found"));
-        User newUser = userRepository.findByEmail(newUserEmail)
-            .orElseThrow(() -> new RuntimeException("New user not found"));
+            
+        UserDTO newUserDTO = userService.getUserById(newUserId);
+        if (newUserDTO == null) {
+            throw new RuntimeException("New user not found");
+        }
+        
+        User newUser = userRepository.findByEmail(newUserDTO.getEmail())
+            .orElseGet(() -> {
+                User user = new User();
+                user.setEmail(newUserDTO.getEmail());
+                user.setName(newUserDTO.getName());
+                return userRepository.save(user);
+            });
         
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -154,7 +170,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectDTO projectDTO = convertToProjectDTO(project);
         MemberDTO memberDTO = new MemberDTO();
-        memberDTO.setUserId(newUser.getId());
+        memberDTO.setUserId(newUserId);
         memberDTO.setJoinedAt(newMember.getJoinedAt());
         projectDTO.getMembers().add(memberDTO);
 
@@ -162,11 +178,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void removeMember(String ownerEmail, Integer projectId, String memberEmail) {
+    @GlobalTransactional
+    public void removeMember(String ownerEmail, Integer projectId, Integer memberId) {
         User owner = userRepository.findByEmail(ownerEmail)
             .orElseThrow(() -> new RuntimeException("Owner not found"));
-        User member = userRepository.findByEmail(memberEmail)
-            .orElseThrow(() -> new RuntimeException("Member not found"));
+            
+        UserDTO memberDTO = userService.getUserById(memberId);
+        if (memberDTO == null) {
+            throw new RuntimeException("Member not found");
+        }
+        
+        User member = userRepository.findByEmail(memberDTO.getEmail())
+            .orElseThrow(() -> new RuntimeException("Member not found in project service"));
         
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -318,12 +341,23 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Transactional
-    public ProjectDTO transferOwnership(String currentOwnerEmail, Integer projectId, String newOwnerEmail) {
+    @GlobalTransactional
+    public ProjectDTO transferOwnership(String currentOwnerEmail, Integer projectId, Integer newOwnerId) {
         User currentOwner = userRepository.findByEmail(currentOwnerEmail)
             .orElseThrow(() -> new RuntimeException("Current owner not found"));
-        User newOwner = userRepository.findByEmail(newOwnerEmail)
-            .orElseThrow(() -> new RuntimeException("New owner not found"));
+            
+        UserDTO newOwnerDTO = userService.getUserById(newOwnerId);
+        if (newOwnerDTO == null) {
+            throw new RuntimeException("New owner not found");
+        }
+        
+        User newOwner = userRepository.findByEmail(newOwnerDTO.getEmail())
+            .orElseGet(() -> {
+                User user = new User();
+                user.setEmail(newOwnerDTO.getEmail());
+                user.setName(newOwnerDTO.getName());
+                return userRepository.save(user);
+            });
         
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
