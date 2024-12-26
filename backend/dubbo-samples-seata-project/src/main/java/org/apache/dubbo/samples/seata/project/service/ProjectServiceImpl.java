@@ -14,6 +14,8 @@ import org.apache.dubbo.samples.seata.project.repository.ProjectMemberRepository
 import org.apache.dubbo.samples.seata.api.util.BeanCopyUtils;
 import org.apache.dubbo.samples.seata.project.repository.UserRepository;
 import org.apache.seata.spring.annotation.GlobalTransactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 @Transactional
 public class ProjectServiceImpl implements ProjectService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProjectServiceImpl.class);
     @Resource
     private ProjectRepository projectRepository;
 
@@ -236,6 +239,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @GlobalTransactional
     public void handleUserDeletion(String email) {
+        log.info("Handling user deletion");
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
         Integer userId = user.getId();
@@ -243,6 +247,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Project> ownedProjects = projectRepository.findByOwnerId(userId);
 
         for (Project project : ownedProjects) {
+            log.info("Deleting project {}", project.getId());
             List<ProjectMember> members = projectMemberRepository.findByProjectIdAndDeletedFalseOrderByJoinedAtAsc(project.getId());
 
             if (members.size() <= 1) {
@@ -264,6 +269,7 @@ public class ProjectServiceImpl implements ProjectService {
             project.setOwner(earliestMember.getUser());
             projectRepository.save(project);
         }
+        log.info("User handling successful");
     }
 
     @Override
@@ -328,9 +334,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @GlobalTransactional
     public void removeUserData(String email) {
+        log.info("Removing user data");
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        userRepository.delete(user);
         Integer userId = user.getId();
         userRepository.findById(userId).ifPresent(u -> {
             List<ProjectMember> memberProjects = projectMemberRepository
@@ -338,6 +344,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectMemberRepository.deleteAll(memberProjects);
             userRepository.delete(u);
         });
+        log.info("User deletion successful");
     }
 
     @Override
