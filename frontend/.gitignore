@@ -1,0 +1,5 @@
+target
+.idea
+.vscode
+seata-server
+node_modules
