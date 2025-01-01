@@ -20,7 +20,10 @@ export const TaskBacklogPage: React.FC = () => {
   });
 
   const { data: tasksData, isLoading: isTasksLoading } = useList<Task>({
-    resource: `projects/${id}/tasks`,
+    resource: "tasks",
+    meta: {
+      projectId: id
+    },
     queryOptions: {
       enabled: true,
     },

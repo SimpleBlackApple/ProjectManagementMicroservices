@@ -20,7 +20,17 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 // 根据resource选择对应的API地址和路径
-const getApiConfig = (resource: string) => {
+const getApiConfig = (resource: string, meta?: any) => {
+  // 处理项目任务的特殊情况
+  if (resource.startsWith('projects/') && resource.endsWith('/tasks')) {
+    const projectId = resource.split('/')[1];
+    return {
+      baseUrl: API_URLS.tasks,
+      path: 'tasks',
+      projectId // 保存projectId用于构建URL
+    };
+  }
+
   switch (resource) {
     case "users":
       return {
@@ -35,15 +45,10 @@ const getApiConfig = (resource: string) => {
     case "tasks":
       return {
         baseUrl: API_URLS.tasks,
-        path: "tasks"
+        path: "tasks",
+        projectId: meta?.projectId // 支持传入projectId
       };
     default:
-      if (resource.startsWith('projects/') && resource.endsWith('/tasks')) {
-        return {
-          baseUrl: API_URLS.tasks,
-          path: resource  // 保持完整路径 "projects/:id/tasks"
-        };
-      }
       return {
         baseUrl: API_URLS.projects,
         path: resource
@@ -52,9 +57,13 @@ const getApiConfig = (resource: string) => {
 };
 
 export const dataProvider: DataProvider = {
-  getList: async ({ resource }) => {
-    const { baseUrl, path } = getApiConfig(resource);
-    const url = `${baseUrl}/api/${path}`;
+  getList: async ({ resource, meta }) => {
+    const { baseUrl, path, projectId } = getApiConfig(resource, meta);
+    // 如果有projectId，使用projects/:id/tasks路径
+    const url = projectId 
+      ? `${baseUrl}/api/projects/${projectId}/tasks`
+      : `${baseUrl}/api/${path}`;
+
     try {
       const { data } = await axiosInstance.get(url);
       return {
@@ -101,7 +110,7 @@ export const dataProvider: DataProvider = {
   },
 
   update: async ({ resource, id, variables, meta }) => {
-    const { baseUrl, path } = getApiConfig(resource);
+    const { baseUrl, path } = getApiConfig(resource, meta);
     const url = resource === "users"
       ? `${baseUrl}/api/${path}`
       : `${baseUrl}/api/${path}/${id}`;
