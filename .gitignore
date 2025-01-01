@@ -2,5 +2,5 @@ target
 .idea
 .vscode
 seata-server
-app-crm-minimal
 *.iml
+.vite
