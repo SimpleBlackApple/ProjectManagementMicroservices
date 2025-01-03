@@ -1,3 +1,7 @@
+Data ID=seataServer.properties
+Format=Properties
+Group=SEATA_GROUP
+
 store.mode=db
 store.lock.mode=db
 store.session.mode=db

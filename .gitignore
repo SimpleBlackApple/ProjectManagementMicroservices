@@ -4,3 +4,5 @@ target
 seata-server
 *.iml
 .vite
+*.log
+*.log.*
