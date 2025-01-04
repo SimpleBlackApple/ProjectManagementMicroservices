@@ -54,6 +54,22 @@ services:
       - app_network
     depends_on:
       - nacos
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: seata-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=pm_assistant
+    ports:
+      - "5433:5432"
+    volumes:
+      - "D:/postgresql/data:/var/lib/postgresql/data"
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
 
 networks:
   app_network:
