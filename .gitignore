@@ -6,3 +6,4 @@ seata-server
 .vite
 *.log
 *.log.*
+*-control.*

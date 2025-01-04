@@ -16,7 +16,6 @@ services:
       - "9848:9848"
     networks:
       - app_network
-
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -29,7 +28,6 @@ services:
     restart: on-failure
     networks:
       - app_network
-
   grafana:
     container_name: grafana
     image: grafana/grafana:latest
@@ -38,6 +36,24 @@ services:
     restart: on-failure
     networks:
       - app_network
+
+  seata-server:
+    image: seataio/seata-server:${SEATA_VERSION}
+    hostname: seata-server
+    ports:
+      - "7091:7091"
+      - "8091:8091"
+    environment:
+      - SEATA_PORT=8091
+      - SEATA_IP=${HOST_IP}
+    volumes:
+      # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/localtime"        #设置系统时区
+      # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/timezone"  #设置时区
+      - "./seata/application.yml:/seata-server/resources/application.yml"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
 
 networks:
   app_network:
