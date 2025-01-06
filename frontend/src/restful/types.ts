@@ -15,7 +15,7 @@ export interface Task {
   title: string;
   description?: string;
   type: 'user_story' | 'bug' | 'task';
-  status: 'TO_DO' | 'IN_PROGRESS' | 'DONE';
+  status: 'UNASSIGNED' | 'TO_DO' | 'IN_PROGRESS' | 'DONE';
   projectId: number;
   sprintId?: number | null;
   managerId: number;
@@ -24,4 +24,4 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
-} 
+}

@@ -6,6 +6,7 @@ import { Card, Space, Tag, Avatar } from 'antd';
 import { Task } from '@/restful/types';
 
 const COLUMNS = [
+  { id: 'unassigned', title: 'Unassigned' },
   { id: 'todo', title: 'To Do' },
   { id: 'in_progress', title: 'In Progress' },
   { id: 'done', title: 'Done' }
@@ -13,7 +14,7 @@ const COLUMNS = [
 
 export const TaskBoardPage: React.FC = () => {
   const { id: projectId } = useParams();
-  
+
   const { data, isLoading } = useList<Task>({
     resource: "tasks",
     filters: [
@@ -37,19 +38,19 @@ export const TaskBoardPage: React.FC = () => {
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', gap: '16px' }}>
         {COLUMNS.map(column => (
-          <div 
-            key={column.id} 
-            style={{ 
-              background: '#f5f5f5', 
-              padding: '16px', 
+          <div
+            key={column.id}
+            style={{
+              background: '#f5f5f5',
+              padding: '16px',
               borderRadius: '8px',
-              width: '300px' 
+              width: '300px'
             }}
           >
             <h3>{column.title}</h3>
             <Space direction="vertical" style={{ width: '100%' }}>
               {getTasksByStatus(column.id).map(task => (
-                <Card 
+                <Card
                   key={task.id}
                   size="small"
                   title={task.title}
@@ -59,15 +60,15 @@ export const TaskBoardPage: React.FC = () => {
                   <Space>
                     {task.priority && (
                       <Tag color={
-                        task.priority === 'high' ? 'red' : 
-                        task.priority === 'medium' ? 'orange' : 
+                        task.priority === 'high' ? 'red' :
+                        task.priority === 'medium' ? 'orange' :
                         'green'
                       }>
                         {task.priority}
                       </Tag>
                     )}
                     {task.assignee && (
-                      <Avatar 
+                      <Avatar
                         src={task.assignee.avatarUrl}
                         size="small"
                       >
@@ -83,4 +84,4 @@ export const TaskBoardPage: React.FC = () => {
       </div>
     </div>
   );
-}; 
+};
