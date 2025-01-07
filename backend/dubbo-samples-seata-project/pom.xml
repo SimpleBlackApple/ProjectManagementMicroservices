@@ -16,7 +16,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <dubbo.version>3.3.0</dubbo.version>
         <nacos.version>2.2.3</nacos.version>
-        <seata.version>2.1.0</seata.version>
+        <seata.version>1.7.0</seata.version>
     </properties>
 
     <dependencies>
@@ -72,7 +72,7 @@
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>

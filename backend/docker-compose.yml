@@ -37,6 +37,66 @@ services:
     networks:
       - app_network
 
+  seata-postgres:
+    image: postgres:latest
+    container_name: seata-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=pm_assistant
+    ports:
+      - "5433:5432"
+    volumes:
+      - seata_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+
+  user-postgres:
+    image: postgres:latest
+    container_name: user-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=user
+    ports:
+      - "5434:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+
+  project-postgres:
+    image: postgres:latest
+    container_name: project-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=project
+    ports:
+      - "5435:5432"
+    volumes:
+      - project_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+
+  task-postgres:
+    image: postgres:latest
+    container_name: task-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=task
+    ports:
+      - "5436:5432"
+    volumes:
+      - task_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+
   seata-server:
     image: seataio/seata-server:${SEATA_VERSION}
     hostname: seata-server
@@ -54,26 +114,65 @@ services:
       - app_network
     depends_on:
       - nacos
-      - postgres
+      - seata-postgres
 
-  postgres:
-    image: postgres:latest
-    container_name: seata-postgres
+  user-service:
+    build: ./dubbo-samples-seata-user # 假设Dockerfile在user-app目录
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=pm_assistant
+      - POSTGRES_HOST=user-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
     ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - "./script/db:/docker-entrypoint-initdb.d"
+      - "8081:8081"
+      - "20890:20890"  # dubbo端口
     networks:
       - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - user-postgres
+
+  project-service:
+    build: ./dubbo-samples-seata-project
+    environment:
+      - POSTGRES_HOST=project-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
+    ports:
+      - "8082:8082"
+      - "20891:20891"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - project-postgres
+
+  task-service:
+    build: ./dubbo-samples-seata-task
+    environment:
+      - POSTGRES_HOST=task-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
+    ports:
+      - "8083:8083"
+      - "20893:20893"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - task-postgres
 
 networks:
   app_network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  seata_postgres_data:
+  user_postgres_data:
+  project_postgres_data:
+  task_postgres_data:
