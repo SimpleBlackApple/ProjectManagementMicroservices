@@ -11,9 +11,9 @@ import { TaskCard, TaskCardMemo } from './components/card';
 import { KanbanAddCardButton } from './components/add-button';
 import { PlusSquareOutlined } from '@ant-design/icons';
 
-const TASK_STATUSES = ['UNASSIGNED','TO_DO', 'IN_PROGRESS', 'DONE'] as const;
+const TASK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'DONE'] as const;
 
-export const TaskBacklogPage: React.FC = () => {
+export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const { id } = useParams();
   const  replace  = useNavigate();
 
@@ -129,6 +129,7 @@ export const TaskBacklogPage: React.FC = () => {
           ))}
         </KanbanBoard>
       </KanbanBoardContainer>
+      {children}
     </div>
   );
 };

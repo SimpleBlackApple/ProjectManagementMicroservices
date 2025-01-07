@@ -47,67 +47,32 @@ function App() {
 
               <Route index element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectListPage />} />
-              <Route path="*" element={<ErrorComponent />} />
             </Route>
 
-            <Route
-              element={
-                <Authenticated
-                  key="authenticated-layout"
-                  fallback={<CatchAllNavigate to="/login" />}>
-                  <TaskLayout>
-                    <Outlet />
-                  </TaskLayout>
-                </Authenticated>
-              }
+            <Route path="/projects/:id"
+                   element={
+                     <Authenticated key="authenticated-task" fallback={<CatchAllNavigate to="/login" />}>
+                       <TaskLayout>
+                         <Outlet />
+                       </TaskLayout>
+                     </Authenticated>
+                   }
             >
-              <Route path="/projects/:id"
-                element={
-                    <Outlet/>
-                }
-              >
-                <Route index element={<TaskBoardPage />} />
-                <Route path="board" element={<TaskBoardPage />} />
-
-                <Route path="/projects/:id">
-                  <Route
-                    path="backlog"
-                    element={
-                      //<TaskBacklogPage>
-                        <Outlet/>
-                      //</TaskBacklogPage>
-                    }
-                  >
-                    <Route index element={<TaskBacklogPage />} />
-                    <Route path="new" element={<TasksCreatePage />} />
-                    <Route path="edit/:taskId" element={<TasksEditPage />} />
-
-                  </Route>
-                </Route>
-
-                <Route path="*" element={<ErrorComponent />} />
+              <Route index element={<TaskBoardPage />} />
+              <Route path="board" element={<TaskBoardPage />} />
+              <Route path="backlog">
+                <Route index element={<TaskBacklogPage />} />
+                <Route path="new" element={
+                  <TaskBacklogPage>
+                    <TasksCreatePage />
+                  </TaskBacklogPage>
+                } />
+                <Route path="edit/:taskId" element={
+                  <TaskBacklogPage>
+                    <TasksEditPage />
+                  </TaskBacklogPage>
+                } />
               </Route>
-
-              {/*<Route path="/projects/:id"*/}
-              {/*       element={*/}
-              {/*         <Outlet/>*/}
-              {/*       }*/}
-              {/*>*/}
-              {/*  <Route index element={<TaskBoardPage />} />*/}
-              {/*  <Route path="board" element={<TaskBoardPage />} />*/}
-              {/*  <Route path="backlog" element={<TaskBacklogPage />} />*/}
-
-              {/*  <Route path="tasks" element={*/}
-              {/*    // <TaskBacklogPage>*/}
-              {/*    <Outlet/>*/}
-              {/*    // </TaskBacklogPage>*/}
-
-              {/*  }>*/}
-              {/*    <Route path="new" element={<TasksCreatePage />} />*/}
-              {/*    <Route path="edit/:taskId" element={<TasksEditPage />} />*/}
-              {/*  </Route>*/}
-              {/*  /!*<Route path="*" element={<ErrorComponent />} />*!/*/}
-              {/*</Route>*/}
             </Route>
 
 

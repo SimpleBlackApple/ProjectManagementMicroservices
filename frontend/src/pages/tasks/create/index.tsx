@@ -3,6 +3,7 @@ import { useModalForm } from "@refinedev/antd";
 import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Input, Modal, DatePicker, Slider, Select } from "antd";
 import dayjs from "dayjs";
+import {useInvalidate} from "@refinedev/core";
 
 const { TextArea } = Input;
 
@@ -10,6 +11,7 @@ export const TasksCreatePage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const invalidate = useInvalidate();
 
   const { formProps, modalProps, close } = useModalForm({
     action: "create",
@@ -18,6 +20,10 @@ export const TasksCreatePage = () => {
     redirect: false,
     warnWhenUnsavedChanges: false,
     onMutationSuccess: () => {
+      invalidate({
+        resource: "tasks",
+        invalidates: ["list"],
+      });
       close();
       navigate(`/projects/${id}/backlog/`);
     },
