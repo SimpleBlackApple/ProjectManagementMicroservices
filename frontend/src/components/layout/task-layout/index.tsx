@@ -34,7 +34,7 @@ export const CustomSider: React.FC = () => {
           // 确保 list 是字符串类型
           const listPath = typeof item.list === 'string' ? item.list : '';
           const route = id ? listPath.replace(':id', id) : listPath;
-          
+
           return (
             <Menu.Item
               key={item.name}
@@ -71,7 +71,7 @@ export const TaskLayout = ({ children }: React.PropsWithChildren) => {
 
 
   const { resources } = useResource();
-  console.log(resources);
+  // console.log(resources);
   return (
     <>
       <ThemedLayoutV2

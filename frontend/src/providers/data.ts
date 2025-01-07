@@ -26,7 +26,7 @@ const getApiConfig = (resource: string, meta?: any) => {
     const projectId = resource.split('/')[1];
     return {
       baseUrl: API_URLS.tasks,
-      path: 'tasks',
+      path: resource,
       projectId // 保存projectId用于构建URL
     };
   }
@@ -60,7 +60,7 @@ export const dataProvider: DataProvider = {
   getList: async ({ resource, meta }) => {
     const { baseUrl, path, projectId } = getApiConfig(resource, meta);
     // 如果有projectId，使用projects/:id/tasks路径
-    const url = projectId 
+    const url = projectId
       ? `${baseUrl}/api/projects/${projectId}/tasks`
       : `${baseUrl}/api/${path}`;
 
@@ -79,10 +79,10 @@ export const dataProvider: DataProvider = {
   getOne: async ({ resource, id }) => {
     const { baseUrl, path } = getApiConfig(resource);
     // 特殊处理users资源
-    const url = resource === "users" 
+    const url = resource === "users"
       ? `${baseUrl}/api/${path}/me`
       : `${baseUrl}/api/${path}/${id}`;
-    
+
     console.log("URL:", url);
     try {
       const { data } = await axiosInstance.get(url);
@@ -114,7 +114,7 @@ export const dataProvider: DataProvider = {
     const url = resource === "users"
       ? `${baseUrl}/api/${path}`
       : `${baseUrl}/api/${path}/${id}`;
-    
+
     try {
       const { data } = await axiosInstance.put(url, variables);
       return {

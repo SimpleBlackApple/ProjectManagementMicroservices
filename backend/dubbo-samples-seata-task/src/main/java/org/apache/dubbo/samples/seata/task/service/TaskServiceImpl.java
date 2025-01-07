@@ -192,9 +192,7 @@ public class TaskServiceImpl implements TaskService {
             BeanUtils.copyProperties(createBody, task);
             task.setProjectId(projectId);
             task.setMember(member);
-            task.setStatus("TO_DO");
-            task.setCreatedAt(LocalDateTime.now());
-            task.setUpdatedAt(LocalDateTime.now());
+            task.setStatus(createBody.getStatus() != null ? createBody.getStatus() : "TO_DO");
             
             // 如果指定了 sprint，验证 sprint
             if (createBody.getSprintId() != null) {
