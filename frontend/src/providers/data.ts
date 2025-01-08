@@ -2,9 +2,9 @@ import { DataProvider } from "@refinedev/core";
 import axios from "axios";
 
 export const API_URLS = {
-  users: "http://localhost:8081",
-  projects: "http://localhost:8082",
-  tasks: "http://localhost:8083"
+  users: "/api/users",     // 不再需要指定具体的域名和端口
+  projects: "/api/projects",
+  tasks: "/api/tasks"
 };
 
 // 创建axios实例
@@ -25,7 +25,7 @@ const getApiConfig = (resource: string, meta?: any) => {
   if (resource.startsWith('projects/') && resource.endsWith('/tasks')) {
     const projectId = resource.split('/')[1];
     return {
-      baseUrl: API_URLS.tasks,
+      baseUrl: '',
       path: 'tasks',
       projectId // 保存projectId用于构建URL
     };
@@ -34,23 +34,23 @@ const getApiConfig = (resource: string, meta?: any) => {
   switch (resource) {
     case "users":
       return {
-        baseUrl: API_URLS.users,
+        baseUrl: '',
         path: "users"
       };
     case "projects":
       return {
-        baseUrl: API_URLS.projects,
+        baseUrl: '',
         path: "projects"
       };
     case "tasks":
       return {
-        baseUrl: API_URLS.tasks,
+        baseUrl: '',
         path: "tasks",
         projectId: meta?.projectId // 支持传入projectId
       };
     default:
       return {
-        baseUrl: API_URLS.projects,
+        baseUrl: '',
         path: resource
       };
   }

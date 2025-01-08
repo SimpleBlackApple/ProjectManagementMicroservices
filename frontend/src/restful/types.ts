@@ -24,4 +24,10 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
+  priority: 'low' | 'medium' | 'high';
+  assignee?: {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+  };
 } 

@@ -7,3 +7,4 @@ seata-server
 *.log
 *.log.*
 *-control.*
+dist
