@@ -25,16 +25,17 @@ export const CustomSider: React.FC = () => {
       }}
       render={({ logout }) => {
         // 过滤出内层资源（parent 为 projects 的资源）
-        const innerResources = resources.filter(
-          (item) => item.meta?.parent === "projects"
-        );
+        const innerResources = resources;
+        // const innerResources = resources.filter(
+        //   (item) => item.meta?.parent === "projects"
+        // );
 
         // 将资源转换为菜单项，替换 URL 中的 :id 参数
         const menuItems = innerResources.map((item) => {
           // 确保 list 是字符串类型
           const listPath = typeof item.list === 'string' ? item.list : '';
           const route = id ? listPath.replace(':id', id) : listPath;
-          
+
           return (
             <Menu.Item
               key={item.name}
@@ -71,7 +72,7 @@ export const TaskLayout = ({ children }: React.PropsWithChildren) => {
 
 
   const { resources } = useResource();
-  console.log(resources);
+  // console.log(resources);
   return (
     <>
       <ThemedLayoutV2

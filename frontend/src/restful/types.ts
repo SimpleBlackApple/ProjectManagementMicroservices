@@ -11,7 +11,7 @@ export interface Project {
 }
 
 export interface Task {
-  id: number;
+  id: number | string;
   title: string;
   description?: string;
   type: 'user_story' | 'bug' | 'task';
@@ -24,4 +24,15 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
-} 
+}
+
+export interface Sprint {
+  id: number;
+  projectId: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  totalStoryPoints: number;
+  completedStoryPoints: number;
+  status: 'TO_DO' | 'IN_PROGRESS' | 'DONE';
+}

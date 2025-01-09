@@ -3,16 +3,19 @@ import { useParams } from 'react-router-dom';
 import { useOne, useList, useUpdate } from "@refinedev/core";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Task } from '@/restful/types';
-
+import { useNavigate } from 'react-router-dom';
 import { KanbanBoard, KanbanBoardContainer } from './components/board';
 import { KanbanColumn } from './components/column';
 import { KanbanItem } from './components/item';
-import { TaskCard } from './components/card';
+import { TaskCard, TaskCardMemo } from './components/card';
+import { KanbanAddCardButton } from './components/add-button';
+import { PlusSquareOutlined } from '@ant-design/icons';
 
 const TASK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'DONE'] as const;
 
-export const TaskBacklogPage: React.FC = () => {
+export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const { id } = useParams();
+  const  replace  = useNavigate();
 
   const { data: projectData, isLoading: isProjectLoading } = useOne({
     resource: "projects",
@@ -45,7 +48,7 @@ export const TaskBacklogPage: React.FC = () => {
     }
 
     const tasks = tasksData.data as Task[];
-    
+
     // 创建状态分组
     const groupedTasks = TASK_STATUSES.reduce((acc, status) => {
       acc[status] = tasks.filter(task => task.status === status);
@@ -85,9 +88,16 @@ export const TaskBacklogPage: React.FC = () => {
     return <KanbanBoardSkeleton />;
   }
 
+  const handleAddCard = (status: typeof TASK_STATUSES[number]) => {
+    // 直接导航到后端API同样的路径结构
+    const path = `/projects/${id}/backlog/new?status=${status}`;
+    console.log(path);
+    replace(path);
+  };
+
   return (
     <div style={{ padding: "24px" }}>
-      <h1>{projectData?.data.name} - 看板</h1>
+      <h1>{projectData?.data.name} - KANBAN</h1>
       <KanbanBoardContainer>
         <KanbanBoard onDragEnd={handleDragEnd}>
           {columns.map((column) => (
@@ -97,6 +107,7 @@ export const TaskBacklogPage: React.FC = () => {
               title={column.title}
               count={column.tasks.length}
               data={column}
+              onAddClick={() => handleAddCard(column.id as typeof TASK_STATUSES[number])}
             >
               {column.tasks.map((task) => (
                 <KanbanItem
@@ -106,13 +117,19 @@ export const TaskBacklogPage: React.FC = () => {
                     ...task
                   }}
                 >
-                  <TaskCard {...task} />
+                  <TaskCardMemo {...task} />
                 </KanbanItem>
               ))}
+              {!column.tasks.length && (
+                <KanbanAddCardButton
+                  onClick={() => handleAddCard(column.id as typeof TASK_STATUSES[number])}
+                />
+              )}
             </KanbanColumn>
           ))}
         </KanbanBoard>
       </KanbanBoardContainer>
+      {children}
     </div>
   );
 };

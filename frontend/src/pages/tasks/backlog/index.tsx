@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams } from 'react-router';
+import React, { useEffect } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { useList } from '@refinedev/core';
 import { Table, Tag, Avatar } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -7,8 +7,9 @@ import { Task } from '@/restful/types';
 
 export const TaskBacklogPage: React.FC = () => {
   const { id: projectId } = useParams();
-  
-  const { data, isLoading } = useList<Task>({
+  const location = useLocation();
+
+  const { data, isLoading, refetch } = useList<Task>({
     resource: "tasks",
     filters: [
       {
@@ -18,6 +19,9 @@ export const TaskBacklogPage: React.FC = () => {
       }
     ]
   });
+  useEffect(() => {
+    refetch();
+  }, [location, refetch]);
 
   const columns: ColumnsType<Task> = [
     {
@@ -31,9 +35,9 @@ export const TaskBacklogPage: React.FC = () => {
       key: 'status',
       render: (status: string) => (
         <Tag color={
-          status === 'done' ? 'green' : 
-          status === 'in_progress' ? 'blue' : 
-          'default'
+          status === 'done' ? 'green' :
+            status === 'in_progress' ? 'blue' :
+              'default'
         }>
           {status.replace('_', ' ').toUpperCase()}
         </Tag>
@@ -45,9 +49,9 @@ export const TaskBacklogPage: React.FC = () => {
       key: 'priority',
       render: (priority: string) => (
         <Tag color={
-          priority === 'high' ? 'red' : 
-          priority === 'medium' ? 'orange' : 
-          'green'
+          priority === 'high' ? 'red' :
+            priority === 'medium' ? 'orange' :
+              'green'
         }>
           {priority.toUpperCase()}
         </Tag>
@@ -57,7 +61,7 @@ export const TaskBacklogPage: React.FC = () => {
       title: 'Assignee',
       dataIndex: 'assignee',
       key: 'assignee',
-      render: (assignee: Task['assignee']) => 
+      render: (assignee: Task['assignee']) =>
         assignee ? (
           <Avatar src={assignee.avatarUrl}>
             {assignee.name[0]}
@@ -68,9 +72,9 @@ export const TaskBacklogPage: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Table 
-        columns={columns} 
-        dataSource={data?.data} 
+      <Table
+        columns={columns}
+        dataSource={data?.data}
         loading={isLoading}
         rowKey="id"
       />

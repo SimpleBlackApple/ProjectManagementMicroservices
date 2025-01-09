@@ -1,0 +1,54 @@
+.taskBoard {
+    padding: 24px;
+  
+    &-container {
+      width: 100%;
+    }
+  
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+  
+      &-title {
+        margin: 0;
+      }
+    }
+  
+    &-sprint {
+      width: 100%;
+      margin-bottom: 16px;
+      position: relative;
+  
+      &-wrapper {
+        position: relative;
+      }
+      &-backlog {
+        
+        position: absolute;
+        right: 65px;
+      }
+      &-header {
+        position: absolute;
+        top: 16px;  // 向上移动按钮
+        right: 20px;
+        z-index: 1;
+  
+        &-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+      }
+    }
+  
+    &-backlog {
+      &-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+    }
+  }

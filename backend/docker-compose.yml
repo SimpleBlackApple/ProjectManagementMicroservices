@@ -105,7 +105,7 @@ services:
       - "8091:8091"
     environment:
       - SEATA_PORT=8091
-      - SEATA_IP=${HOST_IP}
+#      - SEATA_IP=${HOST_IP}
     volumes:
       # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/localtime"        #设置系统时区
       # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/timezone"  #设置时区
