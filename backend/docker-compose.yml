@@ -26,7 +26,7 @@ services:
 
   prometheus:
     container_name: prometheus
-    image: prom/prometheus:latest
+    image: prom/prometheus:${PROMETHEUS_VERSION}
     volumes:
       - ./nacos/prometheus/prometheus-standalone.yaml:/etc/prometheus/prometheus.yml
     ports:
@@ -44,7 +44,7 @@ services:
 
   grafana:
     container_name: grafana
-    image: grafana/grafana:latest
+    image: grafana/grafana:${GRAFANA_VERSION}
     ports:
       - "3000:3000"
     networks:
@@ -57,7 +57,7 @@ services:
     restart: on-failure
 
   seata-postgres:
-    image: postgres:latest
+    image: postgres:${POSTGRES_VERSION}
     container_name: seata-postgres
     environment:
       - POSTGRES_USER=postgres
@@ -78,7 +78,7 @@ services:
     restart: unless-stopped
 
   user-postgres:
-    image: postgres:latest
+    image: postgres:${POSTGRES_VERSION}
     container_name: user-postgres
     environment:
       - POSTGRES_USER=postgres
@@ -99,7 +99,7 @@ services:
     restart: unless-stopped
 
   project-postgres:
-    image: postgres:latest
+    image: postgres:${POSTGRES_VERSION}
     container_name: project-postgres
     environment:
       - POSTGRES_USER=postgres
@@ -120,7 +120,7 @@ services:
     restart: unless-stopped
 
   task-postgres:
-    image: postgres:latest
+    image: postgres:${POSTGRES_VERSION}
     container_name: task-postgres
     environment:
       - POSTGRES_USER=postgres
@@ -166,7 +166,11 @@ services:
     restart: unless-stopped
 
   user-service:
-    build: ./dubbo-samples-seata-user # 假设Dockerfile在user-app目录
+    image: user-service:${USER_SERVICE_VERSION}
+    build:
+      context: ./dubbo-samples-seata-user
+      args:
+        VERSION: ${USER_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=user-postgres
       - POSTGRES_PORT=5432
@@ -189,7 +193,11 @@ services:
     restart: unless-stopped # 除非手动停止，否则总是重启
 
   project-service:
-    build: ./dubbo-samples-seata-project
+    image: project-service:${PROJECT_SERVICE_VERSION}
+    build:
+      context: ./dubbo-samples-seata-project
+      args:
+        VERSION: ${PROJECT_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=project-postgres
       - POSTGRES_PORT=5432
@@ -212,7 +220,11 @@ services:
     restart: unless-stopped
 
   task-service:
-    build: ./dubbo-samples-seata-task
+    image: task-service:${TASK_SERVICE_VERSION}
+    build:
+      context: ./dubbo-samples-seata-task
+      args:
+        VERSION: ${TASK_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=task-postgres
       - POSTGRES_PORT=5432
@@ -235,9 +247,12 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: frontend:${FRONTEND_VERSION}
     build:
       context: ../frontend
       dockerfile: Dockerfile
+      args:
+        VERSION: ${FRONTEND_VERSION}
     ports:
       - "80:80"
     networks:
