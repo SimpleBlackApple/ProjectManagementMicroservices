@@ -3,19 +3,23 @@ import { Refine } from "@refinedev/core";
 import { useNotificationProvider } from "@refinedev/antd";
 import { MainLayout } from "@/components/layouts/main-layout";
 import { Authenticated, ErrorComponent } from "@refinedev/core";
-import {ConfigProvider, List} from "antd";
+import { ConfigProvider, List } from "antd";
 import "@refinedev/antd/dist/reset.css";
 
 import { resources } from "@/config/resources";
 import { authProvider, dataProvider } from "@/providers";
 import { LoginPage } from "./pages/login";
+import { RegisterPage } from "./pages/register";
 import { ProjectListPage } from "./pages/projects";
-import { TaskBoardPage } from "./pages/tasks/board";
+import { TaskBoardPage } from "./pages/tasks/board/index";
 import { TaskBacklogPage } from "./pages/tasks/backlog";
 import { ProjectLayout, TaskLayout } from "@/components/layout";
+import { ProjectsCreatePage } from "./pages/projects/create";
+import { ProjectsEditPage } from "./pages/projects/edit";
 import { CatchAllNavigate } from "@refinedev/react-router";
-import {TasksCreatePage} from "@/pages/tasks/create";
-import {TasksEditPage} from "@/pages/tasks/edit";
+import { TasksCreatePage } from "@/pages/tasks/create";
+import { TasksEditPage } from "@/pages/tasks/edit";
+
 
 function App() {
   return (
@@ -46,20 +50,28 @@ function App() {
             >
 
               <Route index element={<Navigate to="/projects" replace />} />
-              <Route path="/projects" element={<ProjectListPage />} />
+
+              <Route path="projects" element={<ProjectListPage />}>
+                <Route index element={null} />
+                <Route path="new" element={<ProjectsCreatePage />} />
+                <Route path=":id/edit" element={<ProjectsEditPage />} />
+              </Route>
+
             </Route>
 
             <Route path="/projects/:id"
-                   element={
-                     <Authenticated key="authenticated-task" fallback={<CatchAllNavigate to="/login" />}>
-                       <TaskLayout>
-                         <Outlet />
-                       </TaskLayout>
-                     </Authenticated>
-                   }
+              element={
+                <Authenticated key="authenticated-task" fallback={<CatchAllNavigate to="/login" />}>
+                  <TaskLayout>
+                    <Outlet />
+                  </TaskLayout>
+                </Authenticated>
+              }
             >
               <Route index element={<TaskBoardPage />} />
-              <Route path="board" element={<TaskBoardPage />} />
+              <Route path="board">
+                <Route index element={<TaskBoardPage />} />
+              </Route>
               <Route path="backlog">
                 <Route index element={<TaskBacklogPage />} />
                 <Route path="new" element={
@@ -85,6 +97,7 @@ function App() {
               }
             >
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
             </Route>
           </Routes>
         </Refine>

@@ -1,14 +1,16 @@
 import React from 'react';
 import { useDroppable, type UseDroppableArguments } from '@dnd-kit/core';
-import { Badge, Button } from 'antd'; // 添加 Button
-import { PlusOutlined } from '@ant-design/icons'; // 添加图标
+import { Badge, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 
 type Props = {
   id: string;
-  title: string;
+  title: React.ReactNode;
   count: number;
   data?: UseDroppableArguments["data"];
   onAddClick?: (args: { id: string }) => void;
+  style?: React.CSSProperties;
+  showAddButton?: boolean; // 新增控制按钮显示的参数
 };
 
 export const KanbanColumn: React.FC<React.PropsWithChildren<Props>> = ({
@@ -16,7 +18,9 @@ export const KanbanColumn: React.FC<React.PropsWithChildren<Props>> = ({
   id,
   title,
   count,
-  data, onAddClick,
+  data,
+  onAddClick,
+  showAddButton = true, // 默认为 true，保持向后兼容
 }) => {
   const { isOver, setNodeRef, active } = useDroppable({
     id,
@@ -42,11 +46,13 @@ export const KanbanColumn: React.FC<React.PropsWithChildren<Props>> = ({
       <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         <Badge count={count} style={{ backgroundColor: '#52c41a' }} />
-        <Button
-          shape="circle"
-          icon={<PlusOutlined />}
-          onClick={onAddClickHandler}
-        />
+        {showAddButton && (
+          <Button
+            shape="circle"
+            icon={<PlusOutlined />}
+            onClick={onAddClickHandler}
+          />
+        )}
       </div>
       <div style={{
         display: 'flex',

@@ -2,11 +2,20 @@ import { useSearchParams } from "react-router-dom";
 import { useModalForm } from "@refinedev/antd";
 import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Input, Modal, DatePicker, Slider, Select } from "antd";
-import dayjs from "dayjs";
-import {useInvalidate} from "@refinedev/core";
+import dayjs, { Dayjs } from "dayjs";
+import { useInvalidate } from "@refinedev/core";
 
 const { TextArea } = Input;
 
+interface TaskFormValues {
+  title?: string;
+  description?: string;
+  startDate?: Dayjs;
+  dueDate?: Dayjs;
+  status?: string;
+  type?: 'user_story' | 'bug' | 'task';
+  storyPoints?: number;
+}
 export const TasksCreatePage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -44,7 +53,7 @@ export const TasksCreatePage = () => {
       <Form
         {...formProps}
         layout="vertical"
-        onFinish={(values) => {
+        onFinish={(values: TaskFormValues) => {
           const formData = {
             ...values,
             status: searchParams.get("status") || "TO_DO",
@@ -124,8 +133,8 @@ export const TasksCreatePage = () => {
             style={{ width: '100%' }}
             showTime={{
               format: 'HH',
-              minuteStep: 60,
-              secondStep: 60
+              minuteStep: 30,
+              secondStep: 30
             }}
             format="YYYY-MM-DD HH:00"
           />
@@ -143,8 +152,8 @@ export const TasksCreatePage = () => {
             style={{ width: '100%' }}
             showTime={{
               format: 'HH',
-              minuteStep: 60,
-              secondStep: 60
+              minuteStep: 30,
+              secondStep: 30
             }}
             format="YYYY-MM-DD HH:00"
           />

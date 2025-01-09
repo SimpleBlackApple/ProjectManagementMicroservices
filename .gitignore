@@ -7,3 +7,5 @@ seata-server
 *.log
 *.log.*
 *-control.*
+.DS_Store
+.dockerignore

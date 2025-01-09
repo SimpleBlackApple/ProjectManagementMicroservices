@@ -24,6 +24,7 @@ export const TasksEditPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [form] = Form.useForm();
 
+
   // 获取原始任务数据
   useEffect(() => {
     const fetchTask = async () => {
@@ -47,6 +48,7 @@ export const TasksEditPage = () => {
           title: data.title,
           description: data.description,
           type: data.type,
+          status: data.status,
           storyPoints: data.storyPoints,
           startDate: data.startDate ? dayjs(data.startDate) : undefined,
           dueDate: data.dueDate ? dayjs(data.dueDate) : undefined,
@@ -59,6 +61,7 @@ export const TasksEditPage = () => {
     };
 
     fetchTask();
+    // window.location.reload();
   }, [taskId, form]);
 
   // 处理表单提交
@@ -85,13 +88,17 @@ export const TasksEditPage = () => {
       if (!response.ok) {
         throw new Error('Failed to update task');
       }
+      const updatedTask = await response.json(); // 获取后端返回的最新任务数据
 
       message.success('Task updated successfully');
-      navigate(`/projects/${id}/backlog/`);
+
+      navigate(`/projects/${id}/backlog/`, { state: { updatedTask } });
+      window.location.reload();
     } catch (error) {
       message.error('Failed to update task');
     }
   };
+
 
   return (
     <Modal
@@ -122,6 +129,18 @@ export const TasksEditPage = () => {
           rules={[{ required: true, message: "Please input task description!" }]}
         >
           <TextArea rows={4} />
+        </Form.Item>
+
+        <Form.Item
+          label="Status"
+          name="status"
+          rules={[{ required: true, message: "Please select task status!" }]}
+        >
+          <Select>
+            <Select.Option value="TO_DO">To Do</Select.Option>
+            <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
+            <Select.Option value="DONE">Done</Select.Option>
+          </Select>
         </Form.Item>
 
         <Form.Item
@@ -167,8 +186,8 @@ export const TasksEditPage = () => {
             style={{ width: '100%' }}
             showTime={{
               format: 'HH',
-              minuteStep: 60,
-              secondStep: 60
+              minuteStep: 30,
+              secondStep: 30
             }}
             format="YYYY-MM-DD HH:00"
           />
@@ -183,8 +202,8 @@ export const TasksEditPage = () => {
             style={{ width: '100%' }}
             showTime={{
               format: 'HH',
-              minuteStep: 60,
-              secondStep: 60
+              minuteStep: 30,
+              secondStep: 30
             }}
             format="YYYY-MM-DD HH:00"
           />

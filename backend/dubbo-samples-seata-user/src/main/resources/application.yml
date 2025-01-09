@@ -20,7 +20,7 @@ spring:
         driver-class-name: org.postgresql.Driver
         url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/user
         username: ${POSTGRES_USER:postgres}
-        password: ${POSTGRES_PASSWORD:123456}
+        password: ${POSTGRES_PASSWORD:08310744}
     jpa:
         hibernate:
             ddl-auto: update

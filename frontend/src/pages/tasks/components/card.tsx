@@ -9,8 +9,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text } = Typography;
 interface TaskCardProps extends Task {
-  id: string;
-  managerId: number | string;
+  id: string | number;
+  managerId: number ;
 }
 
 const BaseTaskCard: React.FC<TaskCardProps> = (props) => {

@@ -241,6 +241,8 @@ public class TaskServiceImpl implements TaskService {
                 throw new RuntimeException("Sprint does not belong to this project");
             }
             task.setSprint(sprint);
+        } else if (updateBody.getSprintId() == null) {
+            task.setSprint(null);
         }
         
         BeanCopyUtils.copyNonNullProperties(updateBody, task);

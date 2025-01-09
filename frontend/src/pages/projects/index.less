@@ -1,0 +1,56 @@
+// src/pages/projects/index.less
+
+.project-list-container {
+    padding: 24px;
+  
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+  
+      h1 {
+        margin: 0;
+      }
+    }
+  
+    .project-card {
+      cursor: pointer;
+      
+      .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+  
+        .more-button {
+          border: none;
+          padding: 4px;
+          height: auto;
+        }
+      }
+  
+      .card-content {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+  
+        .description {
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 12px;
+        }
+  
+        .icon {
+          margin-right: 4px;
+        }
+  
+        .members {
+          display: flex;
+          justify-content: flex-end;
+          margin-left: auto;
+          margin-right: 0;
+        }
+      }
+    }
+  }
