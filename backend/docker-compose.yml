@@ -17,6 +17,13 @@ services:
       - "9848:9848"
     networks:
       - app_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -116,6 +123,12 @@ services:
     depends_on:
       - nacos
       - seata-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:7091" ]  # 使用 web 控制台接口
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   user-service:
     build: ./dubbo-samples-seata-user # 假设Dockerfile在user-app目录
@@ -133,6 +146,12 @@ services:
       - nacos
       - seata-server
       - user-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/api/actuator/health" ] # 假设有这个健康检查端点
+      interval: 30s # 每30秒检查一次
+      timeout: 10s # 超时时间
+      retries: 3   # 重试次数
+    restart: unless-stopped # 除非手动停止，否则总是重启
 
   project-service:
     build: ./dubbo-samples-seata-project
@@ -150,6 +169,12 @@ services:
       - nacos
       - seata-server
       - project-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/api/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   task-service:
     build: ./dubbo-samples-seata-task
@@ -167,6 +192,12 @@ services:
       - nacos
       - seata-server
       - task-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/api/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   frontend:
     build:
