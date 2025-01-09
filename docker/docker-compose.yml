@@ -1,0 +1,262 @@
+version: "3"
+
+services:
+  nacos:
+    image: nacos/nacos-server:${NACOS_VERSION}
+    container_name: nacos-standalone
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+    volumes:
+      - ./nacos/standalone-logs/:/home/nacos/logs
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    volumes:
+      - ./nacos/prometheus/prometheus-standalone.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - nacos
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:${GRAFANA_VERSION}
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+  seata-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: seata-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=pm_assistant
+    ports:
+      - "5433:5432"
+    volumes:
+      - seata_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  user-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: user-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=user
+    ports:
+      - "5434:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  project-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: project-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=project
+    ports:
+      - "5435:5432"
+    volumes:
+      - project_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  task-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: task-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=task
+    ports:
+      - "5436:5432"
+    volumes:
+      - task_postgres_data:/var/lib/postgresql/data
+      - "./script/db:/docker-entrypoint-initdb.d"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  seata-server:
+    image: seataio/seata-server:${SEATA_VERSION}
+    hostname: seata-server
+    ports:
+      - "7091:7091"
+      - "8091:8091"
+    environment:
+      - SEATA_PORT=8091
+#      - SEATA_IP=${HOST_IP}
+    volumes:
+      # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/localtime"        #设置系统时区
+      # - "/usr/share/zoneinfo/Asia/Shanghai:/etc/timezone"  #设置时区
+      - "./seata/application.yml:/seata-server/resources/application.yml"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:7091" ]  # 使用 web 控制台接口
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  user-service:
+    image: heisepingguo/user-service:${USER_SERVICE_VERSION}
+    environment:
+      - POSTGRES_HOST=user-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
+    ports:
+      - "8081:8081"
+      - "20890:20890"  # dubbo端口
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - user-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/api/actuator/health" ] # 假设有这个健康检查端点
+      interval: 30s # 每30秒检查一次
+      timeout: 10s # 超时时间
+      retries: 3   # 重试次数
+    restart: unless-stopped # 除非手动停止，否则总是重启
+
+  project-service:
+    image: heisepingguo/project-service:${PROJECT_SERVICE_VERSION}
+    environment:
+      - POSTGRES_HOST=project-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
+    ports:
+      - "8082:8082"
+      - "20891:20891"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - project-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/api/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  task-service:
+    image: heisepingguo/task-service:${TASK_SERVICE_VERSION}
+    environment:
+      - POSTGRES_HOST=task-postgres
+      - POSTGRES_PORT=5432
+      - NACOS_HOST=nacos
+      - NACOS_PORT=8848
+    ports:
+      - "8083:8083"
+      - "20893:20893"
+    networks:
+      - app_network
+    depends_on:
+      - nacos
+      - seata-server
+      - task-postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/api/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    image: heisepingguo/frontend:${FRONTEND_VERSION}
+    ports:
+      - "80:80"
+    networks:
+      - app_network
+    depends_on:
+      - user-service
+      - project-service
+      - task-service
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  seata_postgres_data:
+  user_postgres_data:
+  project_postgres_data:
+  task_postgres_data:
