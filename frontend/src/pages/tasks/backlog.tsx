@@ -9,13 +9,14 @@ import { KanbanColumn } from './components/column';
 import { KanbanItem } from './components/item';
 import { TaskCard, TaskCardMemo } from './components/card';
 import { KanbanAddCardButton } from './components/add-button';
+import { MemberManagement } from './components/add-member';
 import { PlusSquareOutlined } from '@ant-design/icons';
 
 const TASK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'DONE'] as const;
 
 export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const { id } = useParams();
-  const  replace  = useNavigate();
+  const replace = useNavigate();
 
   const { data: projectData, isLoading: isProjectLoading } = useOne({
     resource: "projects",
@@ -97,7 +98,20 @@ export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
 
   return (
     <div style={{ padding: "24px" }}>
-      <h1>{projectData?.data.name} - KANBAN</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h1 style={{ margin: 0 }}>{projectData?.data.name} - KANBAN</h1>
+          <MemberManagement
+            members={[
+              { id: '1', name: 'John Doe' },
+              { id: '2', name: 'Jane Smith' },
+            ]}
+            onAddMember={(member) => {
+              console.log('Add member:', member);
+            }}
+          />
+        </div>
+      </div>
       <KanbanBoardContainer>
         <KanbanBoard onDragEnd={handleDragEnd}>
           {columns.map((column) => (

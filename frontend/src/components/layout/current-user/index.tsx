@@ -7,7 +7,7 @@ import { Button, Popover } from "antd";
 
 import type { User } from "@/graphql/schema.types";
 
-import { CustomAvatar } from "../../custom-avatar";
+import { CustomAvatar } from "../../../pages/tasks/components/custom-avatar";
 import { Text } from "../../text";
 import { AccountSettings } from "../account-settings";
 

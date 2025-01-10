@@ -9,6 +9,7 @@ import { KanbanColumn } from '../components/column';
 import { KanbanItem } from '../components/item';
 import { TaskCardMemo } from '../components/card';
 import { Sprint, Task, Project } from '@/restful/types';
+import { MemberManagement } from '../components/add-member';
 import { SprintEditModal } from './edit'
 import { SprintCreateModal } from './create'
 import axios from 'axios';
@@ -277,19 +278,27 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
 
   return (
     <div>
-
-
       <div className="taskBoard">
         <Space direction="vertical" size="large" className="taskBoard-container">
-          <div className="taskBoard-header">
-            <h1 className="taskBoard-header-title">
-              {projectData?.data?.name} - Sprint Board
-            </h1>
+          <div className="taskBoard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <h1 className="taskBoard-header-title" style={{ margin: 0 }}>
+                {projectData?.data?.name} - Sprint Board
+              </h1>
+              <MemberManagement
+                members={[
+                  { id: '1', name: 'John Doe' },
+                  { id: '2', name: 'Jane Smith' },
+                ]}
+                onAddMember={(member) => {
+                  console.log('Add member:', member);
+                }}
+              />
+            </div>
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => {
-                console.log('Navigating to create sprint page...');
                 setIsCreateModalVisible(true)
               }}
               size="small"
