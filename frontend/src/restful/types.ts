@@ -11,7 +11,7 @@ export interface Project {
 }
 
 export interface Task {
-  id: number | string;
+  id: number | undefined;
   title: string;
   description?: string;
   type: 'user_story' | 'bug' | 'task';

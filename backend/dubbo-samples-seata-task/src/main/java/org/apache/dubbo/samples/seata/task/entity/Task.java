@@ -50,11 +50,11 @@ public class Task {
             throw new RuntimeException("Start date must be before due date");
         }
         
-        if (sprint != null) {
-            if (startDate.isBefore(sprint.getStartDate()) || 
-                dueDate.isAfter(sprint.getEndDate())) {
-                throw new RuntimeException("Task dates must be within sprint date range");
-            }
-        }
+        // if (sprint != null) {
+        //     if (startDate.isBefore(sprint.getStartDate()) || 
+        //         dueDate.isAfter(sprint.getEndDate())) {
+        //         throw new RuntimeException("Task dates must be within sprint date range");
+        //     }
+        // }
     }
 } 

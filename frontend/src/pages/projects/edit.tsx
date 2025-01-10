@@ -33,6 +33,7 @@ export const ProjectsEditPage: React.FC = () => {
 
       message.success('Project updated successfully');
       handleCancel();
+      window.location.reload();
     } catch (error) {
       message.error('Failed to update project');
     } finally {

@@ -356,11 +356,11 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                   >
                     {sprintTasks[sprint.id]?.map((task) => (
                       <KanbanItem
-                        key={task.id}
-                        id={task.id.toString()}
+                        key={task.id!}
+                        id={task.id!.toString()}
                         data={task}
                       >
-                        <TaskCardMemo {...task} />
+                        <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
                       </KanbanItem>
                     ))}
                   </KanbanColumn>
@@ -376,11 +376,11 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
             >
               {backlogTasks.map((task) => (
                 <KanbanItem
-                  key={task.id}
-                  id={task.id.toString()}
+                  key={task.id!}
+                  id={task.id!.toString()}
                   data={task}
                 >
-                  <TaskCardMemo {...task} />
+                  <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
                 </KanbanItem>
               ))}
             </KanbanColumn>

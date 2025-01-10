@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useOne, useList, useUpdate } from "@refinedev/core";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -10,13 +10,50 @@ import { KanbanItem } from './components/item';
 import { TaskCard, TaskCardMemo } from './components/card';
 import { KanbanAddCardButton } from './components/add-button';
 import { MemberManagement } from './components/add-member';
+
 import { PlusSquareOutlined } from '@ant-design/icons';
+import axios from 'axios';
+
+interface ProjectMember {
+  id: number;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+}
+
 
 const TASK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'DONE'] as const;
 
 export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const { id } = useParams();
   const replace = useNavigate();
+
+  // 在组件内添加状态
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+
+  // 添加获取成员的函数
+  const fetchMembers = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8082/api/projects/${id}/members`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setMembers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching project members:', error);
+      setMembers([]);
+    }
+  };
+
+  // 在 useEffect 中调用
+  useEffect(() => {
+    fetchMembers();
+  }, [id]);
 
   const { data: projectData, isLoading: isProjectLoading } = useOne({
     resource: "projects",
@@ -102,12 +139,15 @@ export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <h1 style={{ margin: 0 }}>{projectData?.data.name} - KANBAN</h1>
           <MemberManagement
-            members={[
-              { id: '1', name: 'John Doe' },
-              { id: '2', name: 'Jane Smith' },
-            ]}
+            members={members?.filter(member => member && member.id) // 先过滤掉无效的成员
+              .map(member => ({
+                id: String(member.id), // 使用 String() 而不是 toString()
+                name: member.name || '',
+                avatar: member.profilePhoto || undefined
+              })) || [] // 如果 members 是 undefined，返回空数组
+            }
             onAddMember={(member) => {
-              console.log('Add member:', member);
+              fetchMembers(); // 添加新成员后刷新列表
             }}
           />
         </div>
@@ -125,13 +165,13 @@ export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
             >
               {column.tasks.map((task) => (
                 <KanbanItem
-                  key={task.id}
-                  id={task.id.toString()}
+                  key={task.id!}
+                  id={task.id!.toString()}
                   data={{
                     ...task
                   }}
                 >
-                  <TaskCardMemo {...task} />
+                  <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
                 </KanbanItem>
               ))}
               {!column.tasks.length && (

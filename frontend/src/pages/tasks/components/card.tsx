@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text } = Typography;
 interface TaskCardProps extends Task {
-  id: string | number;
+  id: number | undefined;
   managerId: number;
   sprintId?: number | null;
 }
@@ -68,7 +68,7 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
         onClick: () => {
           deleteMutate({
             resource: 'tasks',
-            id,
+            id: id as string | number,
             meta: {
               operation: 'task',
             },
