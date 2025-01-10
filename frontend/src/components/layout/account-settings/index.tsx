@@ -11,7 +11,7 @@ import type {
 } from "@/graphql/types";
 import { getNameInitials } from "@/utilities";
 
-import { CustomAvatar } from "../../custom-avatar";
+import { CustomAvatar } from "../../../pages/tasks/components/custom-avatar";
 import { Text } from "../../text";
 import { UPDATE_USER_MUTATION } from "./queries";
 

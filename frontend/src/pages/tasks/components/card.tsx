@@ -1,8 +1,8 @@
-import React, {memo, useMemo} from 'react';
-import { Card, Tag, Skeleton, Button, Dropdown, Typography, Space, Tooltip, type MenuProps } from 'antd';
+import React, { memo, useMemo } from 'react';
+import { Card, Tag, Skeleton, Button, Dropdown, Typography, Space, Tooltip, type MenuProps, Checkbox } from 'antd';
 import { Task } from '@/restful/types';
 import { EyeOutlined, DeleteOutlined, MoreOutlined, MenuOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useDelete } from '@refinedev/core';
+import { useDelete, useUpdate } from '@refinedev/core';
 import { CustomAvatar } from '@/components';
 import dayjs from 'dayjs';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,24 +10,44 @@ import { useNavigate, useParams } from 'react-router-dom';
 const { Text } = Typography;
 interface TaskCardProps extends Task {
   id: string | number;
-  managerId: number ;
+  managerId: number;
+  sprintId: number | null;
 }
 
 const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
-  const { id:projectId } = useParams();
-  const { id, title, description, type, storyPoints, dueDate, managerId } = props;
-  const  edit  = useNavigate();
-  const { mutate } = useDelete();
+  const { id: projectId } = useParams();
+  const { id, title, description, type, storyPoints, dueDate, managerId, status, sprintId } = props;
+  const edit = useNavigate();
+  const { mutate: deleteMutate } = useDelete();
+  const { mutate: updateMutate } = useUpdate();
 
-  // 将 managerId 转换为符合 users 格式的数组
+  // Convert managerId to users array format
   const users = managerId ? [{
     id: managerId.toString(),
-    name: `User ${managerId}`,  // 你可以根据需要修改用户名的显示方式
+    name: `User ${managerId}`,
     avatarUrl: undefined
   }] : [];
 
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format('MMM DD');
+  };
+
+  const handleStatusChange = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = status === 'DONE' ? 'TO_DO' : 'DONE';
+
+    updateMutate({
+      resource: 'tasks',
+      id,
+      values: {
+        status: newStatus,
+        sprintId: sprintId
+      },
+      meta: {
+        operation: 'task',
+      },
+    });
+    window.location.reload();
   };
 
   const dropdownItems = useMemo(() => {
@@ -46,7 +66,7 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
         key: '2',
         icon: <DeleteOutlined />,
         onClick: () => {
-          mutate({
+          deleteMutate({
             resource: 'tasks',
             id,
             meta: {
@@ -57,7 +77,7 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
       },
     ];
     return items;
-  }, [id, edit, mutate]);
+  }, [id, edit, deleteMutate]);
 
   return (
     <Card
@@ -120,7 +140,7 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
-          {/* 左侧区域：展开按钮、日期和标签 */}
+          {/* Left section: expand button, date and tags */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <Button
               type="text"
@@ -152,28 +172,35 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
                 {formatDate(dueDate)}
               </Tag>
             )}
-            {/*<Tag color="blue">{type}</Tag>*/}
             <Tag color="green">{storyPoints} pts</Tag>
           </div>
 
-          {/* 右侧头像 */}
-          {!!users.length && (
-            <Space
-              size={4}
-              direction="horizontal"
-              align="center"
-            >
-              {users.map((user) => (
-                <Tooltip key={user.id} title={user.name}>
-                  <CustomAvatar
-                    name={user.name}
-                    src={user.avatarUrl}
-                    size="small"
-                  />
-                </Tooltip>
-              ))}
-            </Space>
-          )}
+          {/* Right section: checkbox and avatar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Checkbox
+              checked={status === 'DONE'}
+              onClick={handleStatusChange}
+
+              style={{ marginRight: '8px' }}
+            />
+            {!!users.length && (
+              <Space
+                size={4}
+                direction="horizontal"
+                align="center"
+              >
+                {users.map((user) => (
+                  <Tooltip key={user.id} title={user.name}>
+                    <CustomAvatar
+                      name={user.name}
+                      src={user.avatarUrl}
+                      size="small"
+                    />
+                  </Tooltip>
+                ))}
+              </Space>
+            )}
+          </div>
         </div>
       </div>
     </Card>
@@ -195,7 +222,7 @@ export const TaskCardMemo = memo(BaseTaskCard, (prev, next) => {
     prev.dueDate === next.dueDate &&
     prev.managerId === next.managerId &&
     prev.storyPoints === next.storyPoints &&
-    prev.status === next.status
+    prev.status === next.status &&
+    prev.sprintId === next.sprintId
   );
 });
-

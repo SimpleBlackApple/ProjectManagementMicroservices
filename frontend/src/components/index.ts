@@ -1,5 +1,5 @@
 export * from "./accordion";
-export * from "./custom-avatar";
+export * from "../pages/tasks/components/custom-avatar";
 export * from "./icon";
 export * from "./layout";
 export * from "./pagination-total";

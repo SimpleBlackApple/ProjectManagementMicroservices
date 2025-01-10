@@ -2,19 +2,21 @@ import React, { useState, useEffect, Children } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOne } from "@refinedev/core";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
-import { Spin, Alert, Button, Space, Modal } from 'antd';
+import { Spin, Alert, Button, Space, Modal, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { DeleteSprintButton } from "./deleteSpringButton";
 import { KanbanColumn } from '../components/column';
 import { KanbanItem } from '../components/item';
 import { TaskCardMemo } from '../components/card';
 import { Sprint, Task, Project } from '@/restful/types';
+import { MemberManagement } from '../components/add-member';
 import { SprintEditModal } from './edit'
 import { SprintCreateModal } from './create'
 import axios from 'axios';
 import './index.less';
 import { log } from 'console';
 import dayjs from 'dayjs';
+import { KanbanBoard, KanbanBoardContainer } from '../components/board';
 
 interface TaskBoardPageProps {
   children?: React.ReactNode;
@@ -102,52 +104,69 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
     const targetId = over.id as string;
 
     try {
-      // let newSprintId: number | null = null;
-
-      // // 确定目标 sprintId
-      // if (targetId.startsWith('sprint-')) {
-      //   newSprintId = parseInt(targetId.replace('sprint-', ''));
-      // } else if (targetId === 'backlog') {
-      //   newSprintId = null;
-      // }
       const newSprintId = targetId.startsWith('sprint-')
         ? parseInt(targetId.replace('sprint-', ''))
         : null;
 
-      console.log('Moving task:', {
-        taskId,
-        targetId,
-        newSprintId
-      });
+      // Only show confirmation when moving between sprints
+      if (task.sprintId !== newSprintId && task.sprintId !== null && newSprintId !== null) {
+        // Get source and target sprint information
+        const sourceSprint = sprints.find(sprint => sprint.id === task.sprintId);
+        const targetSprint = sprints.find(sprint => sprint.id === newSprintId);
 
-      if (task.sprintId === newSprintId) {
-        return;
-      }
-
-      console.log('Updating task:', {
-        taskId,
-        currentSprintId: task.sprintId,
-        newSprintId,
-        targetId
-      });
-      // 更新任务的 sprintId
-      await axios.put(
-        `http://localhost:8083/api/tasks/${taskId}`,
-        { sprintId: newSprintId },
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
+        Modal.confirm({
+          title: 'Move Issue',
+          content: (
+            <div>
+              <p>This action will affect the sprint scope</p>
+              <p><strong>{task.title}</strong> will be moved from sprint <strong>{sourceSprint?.name}</strong> to sprint <strong>{targetSprint?.name}</strong>.</p>
+            </div>
+          ),
+          onOk: async () => {
+            try {
+              await axios.put(
+                `http://localhost:8083/api/tasks/${taskId}`,
+                { sprintId: newSprintId },
+                {
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+              await fetchData();
+            } catch (error) {
+              if (axios.isAxiosError(error) && error.response) {
+                Modal.error({
+                  title: 'Failed',
+                  content: error.response.data
+                });
+                console.error('Server error response:', error.response.data);
+              }
+              console.error('Error updating task:', error);
+            }
+          },
+          okText: 'Confirm',
+          cancelText: 'Cancel',
+        });
+      } else {
+        // If not moving between sprints (e.g., moving to backlog), update directly
+        await axios.put(
+          `http://localhost:8083/api/tasks/${taskId}`,
+          { sprintId: newSprintId },
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      );
-
-      // 重新获取数据
-      await fetchData();
+        );
+        await fetchData();
+      }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         Modal.error({
-          title: 'failed',
+          title: 'Failed',
           content: error.response.data
         });
         console.error('Server error response:', error.response.data);
@@ -156,14 +175,33 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
     }
   };
 
-  const handleStartSprint = async (sprintId: number) => {
+  const handleStartSprint = async (sprint: Sprint) => {
     try {
-      await axios.put(
+      let newStatus: 'TO_DO' | 'IN_PROGRESS' | 'DONE';
+      let newStartDate = null;
 
-        `http://localhost:8083/api/projects/${projectId}/sprints/${sprintId}`,
+      // Status cycle: TO_DO -> IN_PROGRESS -> DONE -> TO_DO
+      switch (sprint.status) {
+        case 'TO_DO':
+          newStatus = 'IN_PROGRESS';
+          newStartDate = new Date().toISOString();
+          break;
+        case 'IN_PROGRESS':
+          newStatus = 'DONE';
+          break;
+        case 'DONE':
+          newStatus = 'TO_DO';
+          newStartDate = null; // Reset start date when going back to TO_DO
+          break;
+        default:
+          newStatus = 'TO_DO';
+      }
+
+      await axios.put(
+        `http://localhost:8083/api/sprints/${sprint.id}`,
         {
-          status: 'IN_PROGRESS',
-          startDate: new Date().toISOString()
+          status: newStatus,
+          startDate: newStartDate
         },
         {
           headers: {
@@ -174,7 +212,59 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       );
       await fetchData();
     } catch (error) {
-      console.error('Error starting sprint:', error);
+      console.error('Error updating sprint:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        Modal.error({
+          title: 'Failed',
+          content: (
+            <div>
+              <p>Failed to update sprint status</p>
+              <p style={{ color: '#ff4d4f' }}>{error.response.data}</p>
+            </div>
+          )
+        });
+      } else {
+        Modal.error({
+          title: 'Failed',
+          content: 'Failed to update sprint status'
+        });
+      }
+    }
+  };
+
+  // In the render part:
+  const getSprintButtonProps = (sprint: Sprint) => {
+    switch (sprint.status) {
+      case 'TO_DO':
+        return {
+          type: 'default' as const,
+          children: 'Start Sprint',
+          icon: <PlayCircleOutlined />,
+          title: 'Click to start the sprint'
+        };
+      case 'IN_PROGRESS':
+        return {
+          type: 'primary' as const,
+          children: 'Started',
+          style: { backgroundColor: '#52c41a', borderColor: '#52c41a' },
+          icon: <PlayCircleOutlined />,
+          title: 'Click to mark as done'
+        };
+      case 'DONE':
+        return {
+          type: 'primary' as const,
+          children: 'Done',
+          style: { backgroundColor: '#1890ff', borderColor: '#1890ff' },
+          icon: <PlayCircleOutlined />,
+          title: 'Click to restart sprint'
+        };
+      default:
+        return {
+          type: 'default' as const,
+          children: 'Start Sprint',
+          icon: <PlayCircleOutlined />,
+          title: 'Click to start the sprint'
+        };
     }
   };
 
@@ -188,26 +278,36 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
 
   return (
     <div>
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-        <div className="taskBoard">
-          <Space direction="vertical" size="large" className="taskBoard-container">
-            <div className="taskBoard-header">
-              <h1 className="taskBoard-header-title">
+      <div className="taskBoard">
+        <Space direction="vertical" size="large" className="taskBoard-container">
+          <div className="taskBoard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <h1 className="taskBoard-header-title" style={{ margin: 0 }}>
                 {projectData?.data?.name} - Sprint Board
               </h1>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  console.log('Navigating to create sprint page...');
-                  setIsCreateModalVisible(true)
+              <MemberManagement
+                members={[
+                  { id: '1', name: 'John Doe' },
+                  { id: '2', name: 'Jane Smith' },
+                ]}
+                onAddMember={(member) => {
+                  console.log('Add member:', member);
                 }}
-                size="small"
-              >
-                Create Sprint
-              </Button>
+              />
             </div>
-
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setIsCreateModalVisible(true)
+              }}
+              size="small"
+            >
+              Create Sprint
+            </Button>
+          </div>
+          {/* <KanbanBoardContainer> */}
+          <KanbanBoard onDragEnd={handleDragEnd}>
             {[...sprints]
               .sort((a, b) => a.id - b.id) // 按照 sprintId 升序排序
               .map((sprint: Sprint, index: number) => (
@@ -227,17 +327,16 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                           setIsEditModalVisible(true);
                         }}
                       />
-                      <Button
-                        type="default"
-                        size="small"
-                        icon={<PlayCircleOutlined />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartSprint(sprint.id);
-                        }}
-                      >
-                        Start Sprint
-                      </Button>
+                      <Tooltip title={getSprintButtonProps(sprint).title}>
+                        <Button
+                          {...getSprintButtonProps(sprint)}
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartSprint(sprint);
+                          }}
+                        />
+                      </Tooltip>
                       <DeleteSprintButton
                         sprintId={sprint.id}
                         onDeleteSuccess={fetchData}
@@ -250,7 +349,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                     id={`sprint-${sprint.id}`}
                     title={(
                       <div>
-                        Sprint {index + 1} - {sprint.name}
+                        {index + 1} . {sprint.name}
                       </div>
                     )}
                     count={sprintTasks[sprint.id]?.length || 0}
@@ -265,6 +364,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                       </KanbanItem>
                     ))}
                   </KanbanColumn>
+                  <br />
                 </div>
               ))}
 
@@ -284,10 +384,10 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                 </KanbanItem>
               ))}
             </KanbanColumn>
-          </Space>
+          </KanbanBoard>
+        </Space>
+      </div>
 
-        </div>
-      </DndContext>
 
       <SprintEditModal
         visible={isEditModalVisible}
