@@ -35,6 +35,7 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/actuator/health")).permitAll()
                     .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

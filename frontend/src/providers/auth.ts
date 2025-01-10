@@ -4,7 +4,7 @@ import { API_URLS } from "./data";
 export const authProvider: AuthProvider = {
   login: async ({ email, password }) => {
     try {
-      const response = await fetch(`${API_URLS.users}/api/auth/login`, {
+      const response = await fetch(`/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ export const authProvider: AuthProvider = {
         localStorage.setItem("tokenExpires", data.expiresIn);
         
         // 获取用户信息
-        const userResponse = await fetch(`${API_URLS.users}/api/users/me`, {
+        const userResponse = await fetch(`/api/users/me`, {
           headers: {
             'Authorization': `Bearer ${data.token}`
           }

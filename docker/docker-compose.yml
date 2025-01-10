@@ -166,11 +166,7 @@ services:
     restart: unless-stopped
 
   user-service:
-    image: user-service:${USER_SERVICE_VERSION}
-    build:
-      context: ./dubbo-samples-seata-user
-      args:
-        VERSION: ${USER_SERVICE_VERSION}
+    image: heisepingguo/user-service:${USER_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=user-postgres
       - POSTGRES_PORT=5432
@@ -193,11 +189,7 @@ services:
     restart: unless-stopped # 除非手动停止，否则总是重启
 
   project-service:
-    image: project-service:${PROJECT_SERVICE_VERSION}
-    build:
-      context: ./dubbo-samples-seata-project
-      args:
-        VERSION: ${PROJECT_SERVICE_VERSION}
+    image: heisepingguo/project-service:${PROJECT_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=project-postgres
       - POSTGRES_PORT=5432
@@ -220,11 +212,7 @@ services:
     restart: unless-stopped
 
   task-service:
-    image: task-service:${TASK_SERVICE_VERSION}
-    build:
-      context: ./dubbo-samples-seata-task
-      args:
-        VERSION: ${TASK_SERVICE_VERSION}
+    image: heisepingguo/task-service:${TASK_SERVICE_VERSION}
     environment:
       - POSTGRES_HOST=task-postgres
       - POSTGRES_PORT=5432
@@ -247,12 +235,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: frontend:${FRONTEND_VERSION}
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        VERSION: ${FRONTEND_VERSION}
+    image: heisepingguo/frontend:${FRONTEND_VERSION}
     ports:
       - "80:80"
     networks:

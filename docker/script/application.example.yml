@@ -1,0 +1,5 @@
+Data ID=service.vgroupMapping.default_tx_group
+Format=TEXT
+Group=SEATA_GROUP
+
+default

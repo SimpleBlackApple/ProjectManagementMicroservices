@@ -9,3 +9,4 @@ seata-server
 *-control.*
 .DS_Store
 .dockerignore
+dist

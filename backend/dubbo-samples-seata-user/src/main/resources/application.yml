@@ -36,6 +36,16 @@ spring:
 server:
   port: 8081
 
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health
+            base-path: /api/actuator
+    endpoint:
+        health:
+            show-details: always
+
 dubbo:
   application:
     name: ${spring.application.name}
