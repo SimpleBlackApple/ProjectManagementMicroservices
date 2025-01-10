@@ -34,13 +34,17 @@ export default defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true,
       },
-      // 特殊处理 projects/:id/tasks 和 projects/:id/sprints 路由
+      // 特殊处理 projects/:id/tasks、projects/:id/sprints 和 projects/:id/members 路由
       '^/api/projects/\\d+/tasks': {
         target: 'http://localhost:8083',
         changeOrigin: true,
       },
       '^/api/projects/\\d+/sprints': {
         target: 'http://localhost:8083',
+        changeOrigin: true,
+      },
+      '^/api/projects/\\d+/members': {
+        target: 'http://localhost:8082',
         changeOrigin: true,
       },
       '/api/tasks': {
