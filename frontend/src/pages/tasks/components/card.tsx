@@ -11,7 +11,7 @@ const { Text } = Typography;
 interface TaskCardProps extends Task {
   id: string | number;
   managerId: number;
-  sprintId: number | null;
+  sprintId?: number | null;
 }
 
 const BaseTaskCard: React.FC<TaskCardProps> = (props) => {

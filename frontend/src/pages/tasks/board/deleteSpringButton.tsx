@@ -14,7 +14,7 @@ export const DeleteSprintButton: React.FC<DeleteSprintButtonProps> = ({
 }) => {
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:8083/api/sprints/${sprintId}`, {
+      await axios.delete(`/api/sprints/${sprintId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

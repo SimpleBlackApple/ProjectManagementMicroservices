@@ -43,7 +43,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
 
       // 获取所有 sprints
       const sprintsResponse = await axios.get(
-        `http://localhost:8083/api/projects/${projectId}/sprints`,
+        `/api/projects/${projectId}/sprints`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -56,7 +56,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
 
       // 获取所有任务
       const allTasksResponse = await axios.get(
-        `http://localhost:8083/api/projects/${projectId}/tasks`,
+        `/api/projects/${projectId}/tasks`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -125,7 +125,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
           onOk: async () => {
             try {
               await axios.put(
-                `http://localhost:8083/api/tasks/${taskId}`,
+                `/api/tasks/${taskId}`,
                 { sprintId: newSprintId },
                 {
                   headers: {
@@ -152,7 +152,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       } else {
         // If not moving between sprints (e.g., moving to backlog), update directly
         await axios.put(
-          `http://localhost:8083/api/tasks/${taskId}`,
+          `/api/tasks/${taskId}`,
           { sprintId: newSprintId },
           {
             headers: {
@@ -198,7 +198,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       }
 
       await axios.put(
-        `http://localhost:8083/api/sprints/${sprint.id}`,
+        `/api/sprints/${sprint.id}`,
         {
           status: newStatus,
           startDate: newStartDate

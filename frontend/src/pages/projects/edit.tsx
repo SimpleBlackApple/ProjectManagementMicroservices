@@ -18,10 +18,10 @@ export const ProjectsEditPage: React.FC = () => {
     setLoading(true);
     try {
       console.log(values);
-  
+
       // 添加 headers
       await axios.put(
-        `http://localhost:8082/api/projects/${id}`,
+        `/api/projects/${id}`,
         values,
         {
           headers: {
@@ -30,7 +30,7 @@ export const ProjectsEditPage: React.FC = () => {
           }
         }
       );
-  
+
       message.success('Project updated successfully');
       handleCancel();
     } catch (error) {
@@ -39,7 +39,7 @@ export const ProjectsEditPage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
 
   // 处理取消
   const handleCancel = () => {

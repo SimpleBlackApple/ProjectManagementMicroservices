@@ -26,7 +26,7 @@ const getApiConfig = (resource: string, meta?: any) => {
     const projectId = resource.split('/')[1];
     return {
       baseUrl: '',
-      path: 'tasks',
+      path: resource,
       projectId // 保存projectId用于构建URL
     };
   }
@@ -99,7 +99,10 @@ export const dataProvider: DataProvider = {
     const { baseUrl, path } = getApiConfig(resource);
     const url = `${baseUrl}/api/${path}`;
     try {
+      console.log("Before create", resource)
+      console.log("url: ", url);
       const { data } = await axiosInstance.post(url, variables);
+      console.log("After create", resource)
       return {
         data,
       };

@@ -45,7 +45,7 @@ export const SprintCreateModal: React.FC<SprintCreateModalProps> = ({
   const handleSubmit = async (values: SprintFormValues) => {
     try {
       await axios.post(
-        `http://localhost:8083/api/projects/${projectId}/sprints`,
+        `/api/projects/${projectId}/sprints`,
         {
           name: values.name,
           startDate: values.sprintDates[0].format('YYYY-MM-DDTHH:mm:ss'),

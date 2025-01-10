@@ -50,7 +50,7 @@ export const SprintEditModal: React.FC<SprintEditModalProps> = ({
   const handleSubmit = async (values: SprintFormValues) => {
     try {
       await axios.put(
-        `http://localhost:8083/api/sprints/${sprint?.id}`,
+        `/api/sprints/${sprint?.id}`,
         {
           name: values.name,
           startDate: values.sprintDates[0].format('YYYY-MM-DDTHH:mm:ss'),

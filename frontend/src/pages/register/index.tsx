@@ -20,7 +20,7 @@ export const RegisterPage = () => {
   const handleSubmit = async (values: RegisterFormValues) => {
     try {
       const { confirmPassword, ...registerData } = values;
-      await axios.post('http://localhost:8081/api/auth/signup', registerData);
+      await axios.post('/api/auth/signup', registerData);
       message.success('Registration successful! Please login.');
       navigate('/login');
     } catch (error: any) {
@@ -29,14 +29,14 @@ export const RegisterPage = () => {
   };
 // src/pages/register.tsx
 
-  
+
     return (
       <div className="register-container">
         <div className="register-card">
           <Title level={2} className="register-title">
             Sign up for your account
           </Title>
-  
+
           <Form
             form={form}
             layout="vertical"
@@ -51,7 +51,7 @@ export const RegisterPage = () => {
             >
               <Input />
             </Form.Item>
-  
+
             <Form.Item
               name="email"
               label="Email"
@@ -62,7 +62,7 @@ export const RegisterPage = () => {
             >
               <Input />
             </Form.Item>
-  
+
             <Form.Item
               name="password"
               label="Password"
@@ -78,7 +78,7 @@ export const RegisterPage = () => {
             >
               <Input.Password />
             </Form.Item>
-  
+
             <Form.Item
               name="confirmPassword"
               label="Confirm Password"
@@ -97,14 +97,14 @@ export const RegisterPage = () => {
             >
               <Input.Password />
             </Form.Item>
-  
+
             <Form.Item className="form-item-password">
               <Button type="primary" htmlType="submit" block>
                 Sign up
               </Button>
             </Form.Item>
           </Form>
-  
+
           <div className="signin-link">
             Already have an account? <Link onClick={() => navigate("/login")}>Sign in</Link>
           </div>

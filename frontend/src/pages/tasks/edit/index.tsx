@@ -30,7 +30,7 @@ export const TasksEditPage = () => {
     const fetchTask = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8083/api/tasks/${taskId}`,
+          `/api/tasks/${taskId}`,
           {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -74,7 +74,7 @@ export const TasksEditPage = () => {
       };
 
       const response = await fetch(
-        `http://localhost:8083/api/tasks/${taskId}`,
+        `/api/tasks/${taskId}`,
         {
           method: 'PUT',
           headers: {
