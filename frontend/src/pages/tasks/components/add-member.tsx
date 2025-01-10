@@ -34,7 +34,7 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, onA
             setLoading(true);
 
             // 获取所有用户信息
-            const response = await axios.get('http://localhost:8081/api/users', {
+            const response = await axios.get('/api/users', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 }
@@ -49,7 +49,7 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, onA
             }
 
             // 添加项目成员
-            await axios.post(`http://localhost:8082/api/projects/${projectId}/members/${user.id}`, {}, {
+            await axios.post(`/api/projects/${projectId}/members/${user.id}`, {}, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 }

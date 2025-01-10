@@ -35,7 +35,7 @@ export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const fetchMembers = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8082/api/projects/${id}/members`,
+        `/api/projects/${id}/members`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
