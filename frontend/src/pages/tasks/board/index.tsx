@@ -117,49 +117,98 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         ? parseInt(targetId.replace('sprint-', ''))
         : null;
 
-      // Only show confirmation when moving between sprints
-      if (task.sprintId !== newSprintId && task.sprintId !== null && newSprintId !== null) {
-        // Get source and target sprint information
-        const sourceSprint = sprints.find(sprint => sprint.id === task.sprintId);
+      // 当移动到某个 sprint 时
+      if (newSprintId !== null) {
         const targetSprint = sprints.find(sprint => sprint.id === newSprintId);
+        if (!targetSprint) return;
 
-        Modal.confirm({
-          title: 'Move Issue',
-          content: (
-            <div>
-              <p>This action will affect the sprint scope</p>
-              <p><strong>{task.title}</strong> will be moved from sprint <strong>{sourceSprint?.name}</strong> to sprint <strong>{targetSprint?.name}</strong>.</p>
-            </div>
-          ),
-          onOk: async () => {
-            try {
-              await axios.put(
-                `/api/tasks/${taskId}`,
-                { sprintId: newSprintId },
-                {
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
+        // 检查任务的时间范围并调整
+        const taskStartDate = dayjs(task.startDate);
+        const taskDueDate = dayjs(task.dueDate);
+        const sprintStartDate = dayjs(targetSprint.startDate);
+        const sprintEndDate = dayjs(targetSprint.endDate);
+
+        let newStartDate = task.startDate;
+        let newDueDate = task.dueDate;
+
+        // 如果任务开始时间早于 sprint 开始时间，调整到 sprint 开始时间
+        if (taskStartDate.isBefore(sprintStartDate)) {
+          newStartDate = targetSprint.startDate;
+        }
+
+        // 如果任务结束时间晚于 sprint 结束时间，调整到 sprint 结束时间
+        if (taskDueDate.isAfter(sprintEndDate)) {
+          newDueDate = targetSprint.endDate;
+        }
+
+        // 如果是在 sprints 之间移动
+        if (task.sprintId !== newSprintId && task.sprintId !== null) {
+          const sourceSprint = sprints.find(sprint => sprint.id === task.sprintId);
+
+          Modal.confirm({
+            title: 'Move Issue',
+            content: (
+              <div>
+                <p>This action will affect the sprint scope</p>
+                <p><strong>{task.title}</strong> will be moved from sprint <strong>{sourceSprint?.name}</strong> to sprint <strong>{targetSprint.name}</strong>.</p>
+                {(newStartDate !== task.startDate || newDueDate !== task.dueDate) && (
+                  <p style={{ color: '#ff4d4f' }}>
+                    Task duration will be adjusted to fit within sprint timeline.
+                  </p>
+                )}
+              </div>
+            ),
+            onOk: async () => {
+              try {
+                await axios.put(
+                  `/api/tasks/${taskId}`,
+                  {
+                    sprintId: newSprintId,
+                    startDate: newStartDate,
+                    dueDate: newDueDate
+                  },
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                      'Content-Type': 'application/json'
+                    }
                   }
+                );
+                await fetchData();
+              } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                  Modal.error({
+                    title: 'Failed',
+                    content: error.response.data
+                  });
+                  console.error('Server error response:', error.response.data);
                 }
-              );
-              await fetchData();
-            } catch (error) {
-              if (axios.isAxiosError(error) && error.response) {
-                Modal.error({
-                  title: 'Failed',
-                  content: error.response.data
-                });
-                console.error('Server error response:', error.response.data);
+                console.error('Error updating task:', error);
               }
-              console.error('Error updating task:', error);
+            },
+            okText: 'Confirm',
+            cancelText: 'Cancel',
+          });
+        } else {
+          // 如果是从 backlog 移动到 sprint
+          await axios.put(
+            `/api/tasks/${taskId}`,
+            {
+              sprintId: newSprintId,
+              startDate: newStartDate,
+              dueDate: newDueDate
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+              }
             }
-          },
-          okText: 'Confirm',
-          cancelText: 'Cancel',
-        });
+          );
+          await fetchData();
+        }
       } else {
-        // If not moving between sprints (e.g., moving to backlog), update directly
+        // 如果移动到 backlog，只更新 sprintId
         await axios.put(
           `/api/tasks/${taskId}`,
           { sprintId: newSprintId },
@@ -183,7 +232,6 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       console.error('Error updating task:', error);
     }
   };
-
   const handleStartSprint = async (sprint: Sprint) => {
     try {
       let newStatus: 'TO_DO' | 'IN_PROGRESS' | 'DONE';
