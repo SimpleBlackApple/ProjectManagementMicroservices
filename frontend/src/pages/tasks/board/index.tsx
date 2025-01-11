@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOne } from "@refinedev/core";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
-import { Spin, Alert, Button, Space, Modal, Tooltip } from 'antd';
+import { Spin, Alert, Button, Space, Modal, Tooltip, Tag } from 'antd';
 import { DeleteOutlined, EditOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { DeleteSprintButton } from "./deleteSpringButton";
 import { KanbanColumn } from '../components/column';
@@ -284,6 +284,16 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
     return <Alert type="error" message="Error loading project data" />;
   }
 
+  const calculateSprintPoints = (sprintId: number) => {
+    const tasks = sprintTasks[sprintId] || [];
+    const totalPoints = tasks.reduce((sum, task) => sum + (task.storyPoints || 0), 0);
+    const completedPoints = tasks
+      .filter(task => task.status === 'DONE')
+      .reduce((sum, task) => sum + (task.storyPoints || 0), 0);
+
+    return { totalPoints, completedPoints };
+  };
+
   return (
     <div>
       <div className="taskBoard">
@@ -314,33 +324,38 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                 <div key={`sprint-wrapper-${sprint.id}`} className="taskBoard-sprint-wrapper">
                   <div className="taskBoard-sprint-header">
                     <div className="taskBoard-sprint-header-actions">
-                      <div style={{ fontSize: '12px', color: '#888' }}>
-                        {sprint.startDate ? `Start: ${dayjs(sprint.startDate).format('YYYY-MM-DD')}` : '-'}
-                        {' | '}
-                        {sprint.endDate ? `Due: ${dayjs(sprint.endDate).format('YYYY-MM-DD')}` : '-'}
-                      </div>
-                      <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                          setEditingSprint(sprint);
-                          setIsEditModalVisible(true);
-                        }}
-                      />
-                      <Tooltip title={getSprintButtonProps(sprint).title}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Tag color="green">
+                          {calculateSprintPoints(sprint.id).completedPoints}/{calculateSprintPoints(sprint.id).totalPoints} pts
+                        </Tag>
+                        <div style={{ fontSize: '12px', color: '#888' }}>
+                          {sprint.startDate ? `Start: ${dayjs(sprint.startDate).format('YYYY-MM-DD')}` : '-'}
+                          {' | '}
+                          {sprint.endDate ? `Due: ${dayjs(sprint.endDate).format('YYYY-MM-DD')}` : '-'}
+                        </div>
                         <Button
-                          {...getSprintButtonProps(sprint)}
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStartSprint(sprint);
+                          type="text"
+                          icon={<EditOutlined />}
+                          onClick={() => {
+                            setEditingSprint(sprint);
+                            setIsEditModalVisible(true);
                           }}
                         />
-                      </Tooltip>
-                      <DeleteSprintButton
-                        sprintId={sprint.id}
-                        onDeleteSuccess={fetchData}
-                      />
+                        <Tooltip title={getSprintButtonProps(sprint).title}>
+                          <Button
+                            {...getSprintButtonProps(sprint)}
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartSprint(sprint);
+                            }}
+                          />
+                        </Tooltip>
+                        <DeleteSprintButton
+                          sprintId={sprint.id}
+                          onDeleteSuccess={fetchData}
+                        />
+                      </div>
                     </div>
                   </div>
                   <KanbanColumn
