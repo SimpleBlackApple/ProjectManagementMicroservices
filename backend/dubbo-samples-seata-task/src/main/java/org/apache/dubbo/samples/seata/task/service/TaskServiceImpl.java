@@ -169,31 +169,34 @@ public class TaskServiceImpl implements TaskService {
     @GlobalTransactional
     public TaskDTO createTask(String email, Integer projectId, TaskCreateBody createBody) {
         try {
-            User creator = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!projectService.validateUserProject(email, projectId)) {
+            throw new RuntimeException("Access denied: user is not a member of this project");
+        }
+        
+        Task task = new Task();
+        BeanUtils.copyProperties(createBody, task);
+        task.setProjectId(projectId);
+        task.setStatus(createBody.getStatus() != null ? createBody.getStatus() : "TO_DO");
+        
+        // 只有在指定了 managerId 时才设置负责人
+        if (createBody.getManagerId() != null) {
+            // 添加日志
+            System.out.println("Input managerId: " + createBody.getManagerId());
             
-            if (!projectService.validateUserProject(email, projectId)) {
-                throw new RuntimeException("Access denied: user is not a member of this project");
+            // 直接通过ID查找用户
+            User member = userRepository.findById(createBody.getManagerId())
+                    .orElseThrow(() -> new RuntimeException("Member not found with ID: " + createBody.getManagerId()));
+            
+            // 验证用户是否为项目成员
+            if (!projectService.validateUserProject(member.getEmail(), projectId)) {
+                throw new RuntimeException("Assigned member is not a member of this project");
             }
             
-            // 验证指定的负责人是否是项目成员
-            Integer assigneeId = createBody.getManagerId();
-            User member = creator;
-            if (assigneeId != null) {
-                UserDTO assignee = userService.getUserById(assigneeId);
-                if (!projectService.validateUserProject(assignee.getEmail(), projectId)) {
-                    throw new RuntimeException("Assigned member is not a member of this project");
-                }
-                member = userRepository.findByEmail(assignee.getEmail())
-                        .orElseThrow(() -> new RuntimeException("Member not found"));
-            }
-
-            Task task = new Task();
-            BeanUtils.copyProperties(createBody, task);
-            task.setProjectId(projectId);
             task.setMember(member);
-            task.setStatus(createBody.getStatus() != null ? createBody.getStatus() : "TO_DO");
             
+            // 添加日志
+            System.out.println("Set member ID: " + member.getId());
+        }
             // 如果指定了 sprint，验证 sprint
             if (createBody.getSprintId() != null) {
                 Sprint sprint = sprintRepository.findById(createBody.getSprintId())
@@ -220,18 +223,24 @@ public class TaskServiceImpl implements TaskService {
     @GlobalTransactional
     public TaskDTO updateTask(String email, Integer taskId, TaskUpdateBody updateBody) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-                
-        if (!projectService.validateUserProject(email, task.getProjectId())) {
-            throw new RuntimeException("Access denied: user is not a member of this project");
-        }
-        
-        // 只有任务负责人可以更新任务
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!task.getMember().getId().equals(user.getId())) {
-            throw new RuntimeException("Only task assignee can update the task");
-        }
+            .orElseThrow(() -> new RuntimeException("Task not found"));
+            
+    if (!projectService.validateUserProject(email, task.getProjectId())) {
+        throw new RuntimeException("Access denied: user is not a member of this project");
+    }
+    
+    // 更新负责人
+    if (updateBody.getManagerId() != null) {
+        User member = userRepository.findById(updateBody.getManagerId())
+                    .orElseThrow(() -> new RuntimeException("Member not found with ID: " + updateBody.getManagerId()));
+            
+            // 验证用户是否为项目成员
+            if (!projectService.validateUserProject(member.getEmail(), task.getProjectId())) {
+                throw new RuntimeException("Assigned member is not a member of this project");
+            }
+            
+            task.setMember(member);
+    }
         
         if (updateBody.getSprintId() != null) {
             Sprint sprint = sprintRepository.findById(updateBody.getSprintId())

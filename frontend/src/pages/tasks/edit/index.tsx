@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal, message, Form, Input, DatePicker, Slider, Select } from "antd";
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from "dayjs";
+import { ProjectMembers } from '../components/member/index';
 
 const { TextArea } = Input;
 
@@ -52,6 +53,7 @@ export const TasksEditPage = () => {
           storyPoints: data.storyPoints,
           startDate: data.startDate ? dayjs(data.startDate) : undefined,
           dueDate: data.dueDate ? dayjs(data.dueDate) : undefined,
+          managerId: data.managerId
         });
       } catch (error) {
         message.error('Failed to load task');
@@ -71,7 +73,9 @@ export const TasksEditPage = () => {
         ...values,
         startDate: values.startDate?.format('YYYY-MM-DDTHH:00:00'),
         dueDate: values.dueDate?.format('YYYY-MM-DDTHH:00:00'),
+        managerId: values.managerId ? Number(values.managerId) : null
       };
+      console.log('Submitting form data:', formData);
 
       const response = await fetch(
         `/api/tasks/${taskId}`,
@@ -174,6 +178,39 @@ export const TasksEditPage = () => {
             tooltip={{
               formatter: (value) => `${value} points`
             }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Assignee"
+          name="managerId"
+          rules={[{ required: false, message: "Please select an assignee!" }]}
+        >
+          <ProjectMembers
+            projectId={id as string}
+            displayManagement={false}
+            render={(members) => (
+              <Select
+                placeholder="Select an assignee"
+                allowClear
+                showSearch
+                onChange={(value) => {
+                  console.log('Selected value:', value);
+                  form.setFieldValue('managerId', value);
+                }}
+                filterOption={(input, option) =>
+                  option && typeof option.label === 'string'
+                    ? option.label.toLowerCase().includes(input.toLowerCase())
+                    : false
+                }
+              >
+                {members.map(member => (
+                  <Select.Option key={member.id} value={member.id}>
+                    {member.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            )}
           />
         </Form.Item>
 

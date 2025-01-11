@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useOne, useList, useUpdate } from "@refinedev/core";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
@@ -9,51 +9,13 @@ import { KanbanColumn } from './components/column';
 import { KanbanItem } from './components/item';
 import { TaskCard, TaskCardMemo } from './components/card';
 import { KanbanAddCardButton } from './components/add-button';
-import { MemberManagement } from './components/add-member';
-
-import { PlusSquareOutlined } from '@ant-design/icons';
-import axios from 'axios';
-
-interface ProjectMember {
-  id: number;
-  name: string;
-  email: string;
-  profilePhoto: string | null;
-}
-
+import { ProjectMembers } from './components/member/index';
 
 const TASK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'DONE'] as const;
 
 export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
   const { id } = useParams();
   const replace = useNavigate();
-
-  // 在组件内添加状态
-  const [members, setMembers] = useState<ProjectMember[]>([]);
-
-  // 添加获取成员的函数
-  const fetchMembers = async () => {
-    try {
-      const response = await axios.get(
-        `/api/projects/${id}/members`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      setMembers(response.data || []);
-    } catch (error) {
-      console.error('Error fetching project members:', error);
-      setMembers([]);
-    }
-  };
-
-  // 在 useEffect 中调用
-  useEffect(() => {
-    fetchMembers();
-  }, [id]);
 
   const { data: projectData, isLoading: isProjectLoading } = useOne({
     resource: "projects",
@@ -138,18 +100,7 @@ export const TaskBacklogPage = ({ children }: React.PropsWithChildren) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <h1 style={{ margin: 0 }}>{projectData?.data.name} - KANBAN</h1>
-          <MemberManagement
-            members={members?.filter(member => member && member.id) // 先过滤掉无效的成员
-              .map(member => ({
-                id: String(member.id), // 使用 String() 而不是 toString()
-                name: member.name || '',
-                avatar: member.profilePhoto || undefined
-              })) || [] // 如果 members 是 undefined，返回空数组
-            }
-            onAddMember={(member) => {
-              fetchMembers(); // 添加新成员后刷新列表
-            }}
-          />
+          <ProjectMembers projectId={id as string} />
         </div>
       </div>
       <KanbanBoardContainer>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Children } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOne } from "@refinedev/core";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
@@ -9,12 +9,11 @@ import { KanbanColumn } from '../components/column';
 import { KanbanItem } from '../components/item';
 import { TaskCardMemo } from '../components/card';
 import { Sprint, Task, Project } from '@/restful/types';
-import { MemberManagement } from '../components/add-member';
+import { ProjectMembers } from '../components/member/index';
 import { SprintEditModal } from './edit'
 import { SprintCreateModal } from './create'
 import axios from 'axios';
 import './index.less';
-import { log } from 'console';
 import dayjs from 'dayjs';
 import { KanbanBoard, KanbanBoardContainer } from '../components/board';
 
@@ -40,6 +39,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('Fetching data for project:', projectId);
 
       // 获取所有 sprints
       const sprintsResponse = await axios.get(
@@ -65,7 +65,8 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         }
       );
       const allTasks = allTasksResponse.data;
-      console.log(allTasks)
+      console.log('All tasks fetched:', allTasks)
+
       // 分离 backlog 任务和 sprint 任务
       const backlog = allTasks.filter((task: Task) =>
         task.sprintId === null && task.projectId === Number(projectId)
@@ -86,13 +87,21 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
 
     } catch (error) {
       console.error('Error fetching data:', error);
+      if (axios.isAxiosError(error)) {
+        Modal.error({
+          title: 'Failed to load data',
+          content: error.response?.data || 'Unknown error occurred'
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    if (projectId) {
+      fetchData();
+    }
   }, [projectId]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -232,7 +241,6 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
     }
   };
 
-  // In the render part:
   const getSprintButtonProps = (sprint: Sprint) => {
     switch (sprint.status) {
       case 'TO_DO':
@@ -285,15 +293,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
               <h1 className="taskBoard-header-title" style={{ margin: 0 }}>
                 {projectData?.data?.name} - Sprint Board
               </h1>
-              <MemberManagement
-                members={[
-                  { id: '1', name: 'John Doe' },
-                  { id: '2', name: 'Jane Smith' },
-                ]}
-                onAddMember={(member) => {
-                  console.log('Add member:', member);
-                }}
-              />
+              <ProjectMembers projectId={projectId as string} />
             </div>
             <Button
               type="primary"
@@ -306,10 +306,10 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
               Create Sprint
             </Button>
           </div>
-          {/* <KanbanBoardContainer> */}
+
           <KanbanBoard onDragEnd={handleDragEnd}>
             {[...sprints]
-              .sort((a, b) => a.id - b.id) // 按照 sprintId 升序排序
+              .sort((a, b) => a.id - b.id)
               .map((sprint: Sprint, index: number) => (
                 <div key={`sprint-wrapper-${sprint.id}`} className="taskBoard-sprint-wrapper">
                   <div className="taskBoard-sprint-header">
@@ -388,7 +388,6 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         </Space>
       </div>
 
-
       <SprintEditModal
         visible={isEditModalVisible}
         sprint={editingSprint}
@@ -405,6 +404,9 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         }}
         onSuccess={fetchData}
       />
+      {children}
     </div>
   );
 };
+
+export default TaskBoardPage;

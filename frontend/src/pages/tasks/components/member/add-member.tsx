@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Tooltip, Space, Form, Input, message } from 'antd';
 import { UserAddOutlined } from '@ant-design/icons';
-import { CustomAvatar } from '@/components';
+import { CustomAvatar } from './avatar';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 

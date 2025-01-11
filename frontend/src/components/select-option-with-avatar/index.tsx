@@ -1,4 +1,4 @@
-import { CustomAvatar } from "../../pages/tasks/components/custom-avatar";
+import { CustomAvatar } from "../../pages/tasks/components/member/avatar";
 import { Text } from "../text";
 
 type Props = {

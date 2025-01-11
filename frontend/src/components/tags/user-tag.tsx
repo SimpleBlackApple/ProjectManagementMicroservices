@@ -2,7 +2,7 @@ import { Space, Tag } from "antd";
 
 import type { User } from "@/graphql/schema.types";
 
-import { CustomAvatar } from "../../pages/tasks/components/custom-avatar";
+import { CustomAvatar } from "../../pages/tasks/components/member/avatar";
 
 type Props = {
   user: User;

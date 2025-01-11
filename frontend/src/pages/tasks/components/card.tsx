@@ -3,7 +3,7 @@ import { Card, Tag, Skeleton, Button, Dropdown, Typography, Space, Tooltip, type
 import { Task } from '@/restful/types';
 import { EyeOutlined, DeleteOutlined, MoreOutlined, MenuOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useDelete, useUpdate } from '@refinedev/core';
-import { CustomAvatar } from '@/components';
+import { ProjectMembers } from './member/index';
 import dayjs from 'dayjs';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -183,22 +183,35 @@ const BaseTaskCard: React.FC<TaskCardProps> = (props) => {
 
               style={{ marginRight: '8px' }}
             />
-            {!!users.length && (
-              <Space
-                size={4}
-                direction="horizontal"
-                align="center"
-              >
-                {users.map((user) => (
-                  <Tooltip key={user.id} title={user.name}>
-                    <CustomAvatar
-                      name={user.name}
-                      src={user.avatarUrl}
-                      size="small"
-                    />
-                  </Tooltip>
-                ))}
-              </Space>
+            {managerId && (
+              <ProjectMembers
+                projectId={projectId as string}
+                displayManagement={false}
+                selectedUserId={managerId} 
+                render={(members) => {
+                  const assignedMember = members.find(member => member.id === managerId);
+                  if (assignedMember) {
+                    return (
+                      <Tooltip title={assignedMember.name}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          backgroundColor: '#f0f0f0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          color: '#666'
+                        }}>
+                          {assignedMember.name.charAt(0).toUpperCase()}
+                        </div>
+                      </Tooltip>
+                    );
+                  }
+                  return null;
+                }}
+              />
             )}
           </div>
         </div>

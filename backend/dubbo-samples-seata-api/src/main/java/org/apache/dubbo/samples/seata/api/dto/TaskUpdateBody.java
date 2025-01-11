@@ -16,4 +16,5 @@ public class TaskUpdateBody implements Serializable {
     private Integer storyPoints;
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
+    private Integer managerId;
 } 

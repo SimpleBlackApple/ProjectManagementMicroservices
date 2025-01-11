@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Input, Modal, DatePicker, Slider, Select } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { useInvalidate } from "@refinedev/core";
+import { ProjectMembers } from '../components/member/index';
 
 const { TextArea } = Input;
 
@@ -15,6 +16,7 @@ interface TaskFormValues {
   status?: string;
   type?: 'user_story' | 'bug' | 'task';
   storyPoints?: number;
+  managerId?: number;
 }
 export const TasksCreatePage = () => {
   const { id } = useParams();
@@ -59,6 +61,7 @@ export const TasksCreatePage = () => {
             status: searchParams.get("status") || "TO_DO",
             startDate: values.startDate?.format('YYYY-MM-DDTHH:00:00'),
             dueDate: values.dueDate?.format('YYYY-MM-DDTHH:00:00'),
+            managerId: values.managerId ? Number(values.managerId) : null,
           };
           formProps.onFinish?.(formData);
           console.log(formData)
@@ -96,6 +99,45 @@ export const TasksCreatePage = () => {
             <Select.Option value="bug">Bug</Select.Option>
             <Select.Option value="task">Task</Select.Option>
           </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Assignee"
+          name="managerId"
+          rules={[{ required: false, message: "Please select an assignee!" }]}
+        >
+          <ProjectMembers
+            projectId={id as string}
+            displayManagement={false}
+            render={(members) => (
+              <Select
+                placeholder="Select an assignee"
+                allowClear
+                showSearch
+                onChange={(userId) => {
+                  // 将 userId 映射为 managerId
+                  const managerId = userId ? Number(userId) : null;
+                  formProps.form?.setFieldValue('managerId', managerId);
+                  console.log('Selected userId:', userId);
+                  console.log('Set as managerId:', managerId);
+                }}
+                filterOption={(input, option) =>
+                  option && typeof option.label === 'string'
+                    ? option.label.toLowerCase().includes(input.toLowerCase())
+                    : false
+                }
+              >
+                {members.map(member => (
+                  <Select.Option
+                    key={member.id}
+                    value={member.id}  // 这里的 member.id 是 userId
+                  >
+                    {member.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            )}
+          />
         </Form.Item>
 
         <Form.Item
