@@ -16,6 +16,7 @@ interface Task {
   startDate: string;
   dueDate: string;
   managerId?: number;
+  sprintId?: number;
 }
 
 export const TasksEditPage = () => {
@@ -73,7 +74,8 @@ export const TasksEditPage = () => {
         ...values,
         startDate: values.startDate?.format('YYYY-MM-DDTHH:00:00'),
         dueDate: values.dueDate?.format('YYYY-MM-DDTHH:00:00'),
-        managerId: values.managerId ? Number(values.managerId) : null
+        managerId: values.managerId ? Number(values.managerId) : null,
+        sprintId: task?.sprintId
       };
       console.log('Submitting form data:', formData);
 
@@ -194,6 +196,7 @@ export const TasksEditPage = () => {
                 placeholder="Select an assignee"
                 allowClear
                 showSearch
+                value={form.getFieldValue('managerId')}
                 onChange={(value) => {
                   console.log('Selected value:', value);
                   form.setFieldValue('managerId', value);
