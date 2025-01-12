@@ -131,13 +131,9 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         let newStartDate = task.startDate;
         let newDueDate = task.dueDate;
 
-        // 如果任务开始时间早于 sprint 开始时间，调整到 sprint 开始时间
-        if (taskStartDate.isBefore(sprintStartDate)) {
+        // 如果任务的开始或结束时间超出 sprint 范围，则将整个任务时间调整为 sprint 的时间范围
+        if (taskStartDate.isBefore(sprintStartDate) || taskDueDate.isAfter(sprintEndDate)) {
           newStartDate = targetSprint.startDate;
-        }
-
-        // 如果任务结束时间晚于 sprint 结束时间，调整到 sprint 结束时间
-        if (taskDueDate.isAfter(sprintEndDate)) {
           newDueDate = targetSprint.endDate;
         }
 

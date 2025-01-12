@@ -3,7 +3,8 @@ import type { IResourceItem } from "@refinedev/core";
 import {
   DashboardOutlined,
   ProjectOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+  ClockCircleOutlined
 } from "@ant-design/icons";
 
 export const resources: IResourceItem[] = [
@@ -21,6 +22,14 @@ export const resources: IResourceItem[] = [
     meta: {
       parent: "projects",
       icon: <DashboardOutlined />
+    }
+  },
+  {
+    name: "timeline",
+    list: "/projects/:id/timeline", // 定义 timeline 的路由
+    meta: {
+      parent: "projects", // 指定为 projects 的子模块
+      icon: <ClockCircleOutlined /> // 使用一个时间相关的图标
     }
   },
   {

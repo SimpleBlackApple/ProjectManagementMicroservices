@@ -19,6 +19,7 @@ import { ProjectsEditPage } from "./pages/projects/edit";
 import { CatchAllNavigate } from "@refinedev/react-router";
 import { TasksCreatePage } from "@/pages/tasks/create";
 import { TasksEditPage } from "@/pages/tasks/edit";
+import GanttChart from "./pages/tasks/components/timeline/timeline";
 
 
 function App() {
@@ -56,7 +57,6 @@ function App() {
                 <Route path="new" element={<ProjectsCreatePage />} />
                 <Route path=":id/edit" element={<ProjectsEditPage />} />
               </Route>
-
             </Route>
 
             <Route path="/projects/:id"
@@ -72,6 +72,7 @@ function App() {
               <Route path="board">
                 <Route index element={<TaskBoardPage />} />
               </Route>
+              <Route path="timeline" element={<GanttChart />} />
               <Route path="backlog">
                 <Route index element={<TaskBacklogPage />} />
                 <Route path="new" element={

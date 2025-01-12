@@ -5,9 +5,9 @@ import { Outlet } from "react-router";
 export const MainLayout: React.FC = () => {
   const location = useLocation();
   const projectId = location.pathname.split('/')[2]; // 获取项目ID
-  const showSidebar = location.pathname.includes("/projects/") && 
-                      (location.pathname.includes("/board") || 
-                       location.pathname.includes("/backlog"));
+  const showSidebar = location.pathname.includes("/projects/") &&
+    (location.pathname.includes("/board") || location.pathname.includes("/timeline") ||
+      location.pathname.includes("/backlog"));
 
   return (
     <AntdLayout style={{ minHeight: "100vh" }}>
@@ -27,6 +27,9 @@ export const MainLayout: React.FC = () => {
               </Menu.Item>
               <Menu.Item key={`/projects/${projectId}/backlog`}>
                 <Link to={`/projects/${projectId}/backlog`}>Backlog</Link>
+              </Menu.Item>
+              <Menu.Item key={`/projects/${projectId}/timeline`}>
+                <Link to={`/projects/${projectId}/timeline`}>Timeline</Link>
               </Menu.Item>
             </Menu>
           </AntdLayout.Sider>
