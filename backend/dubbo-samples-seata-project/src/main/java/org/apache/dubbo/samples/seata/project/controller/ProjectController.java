@@ -1,15 +1,27 @@
 package org.apache.dubbo.samples.seata.project.controller;
 
+import java.util.List;
+
+import org.apache.dubbo.samples.seata.api.dto.MemberDTO;
+import org.apache.dubbo.samples.seata.api.dto.ProjectCreateBody;
+import org.apache.dubbo.samples.seata.api.dto.ProjectDTO;
+import org.apache.dubbo.samples.seata.api.dto.ProjectUpdateBody;
 import org.apache.dubbo.samples.seata.api.service.ProjectService;
-import org.apache.dubbo.samples.seata.api.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -49,24 +61,24 @@ public class ProjectController {
 
     @PutMapping("/{projectId}")
     public ProjectDTO updateProject(
-        @PathVariable Integer projectId,
-        @RequestBody ProjectUpdateBody updateBody
+            @PathVariable Integer projectId,
+            @RequestBody ProjectUpdateBody updateBody
     ) {
         return projectService.updateProject(getCurrentUserEmail(), projectId, updateBody);
     }
 
     @PostMapping("/{projectId}/members/{newUserId}")
     public ProjectDTO addMember(
-        @PathVariable Integer projectId,
-        @PathVariable Integer newUserId
+            @PathVariable Integer projectId,
+            @PathVariable Integer newUserId
     ) {
         return projectService.addMember(getCurrentUserEmail(), projectId, newUserId);
     }
 
     @DeleteMapping("/{projectId}/members/{memberId}")
     public void removeMember(
-        @PathVariable Integer projectId,
-        @PathVariable Integer memberId
+            @PathVariable Integer projectId,
+            @PathVariable Integer memberId
     ) {
         projectService.removeMember(getCurrentUserEmail(), projectId, memberId);
     }
@@ -84,45 +96,45 @@ public class ProjectController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("Project not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
+                        .body(e.getMessage());
             }
             if (e.getMessage().contains("Only project owner")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(e.getMessage());
+                        .body(e.getMessage());
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
     }
 
     @PostMapping("/{projectId}/transfer-ownership/{newOwnerId}")
     public ProjectDTO transferOwnership(
-        @PathVariable Integer projectId,
-        @PathVariable Integer newOwnerId
+            @PathVariable Integer projectId,
+            @PathVariable Integer newOwnerId
     ) {
         return projectService.transferOwnership(getCurrentUserEmail(), projectId, newOwnerId);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        if (e.getMessage().contains("Project not found") || 
-            e.getMessage().contains("User not found")) {
+        if (e.getMessage().contains("Project not found")
+                || e.getMessage().contains("User not found")) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
         if (e.getMessage().contains("Access denied")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
         if (e.getMessage().contains("User is already a member")) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
         if (e.getMessage().contains("Only project owner")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(e.getMessage());
+                .body(e.getMessage());
     }
-} 
+}

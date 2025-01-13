@@ -36,15 +36,23 @@ export const ProjectMembers: React.FC<ProjectMembersProps> = ({
     displayManagement = true
 }) => {
     const [members, setMembers] = useState<UserInfo[]>([]);
+    const [memberRelations, setMemberRelations] = useState<ProjectMemberRelation[]>([]);
 
-    // 筛选显示的成员
-    const displayMembers = selectedUserId
-        ? members.filter(member => member.id === selectedUserId)
-        : members;
+    // 筛选显示的成员，考虑 deleted 状态
+    const displayMembers = members.filter(member => {
+        // 如果指定了 selectedUserId，只显示该用户
+        if (selectedUserId) {
+            return member.id === selectedUserId;
+        }
+
+        // 检查成员是否未被删除
+        const relation = memberRelations.find(rel => rel.userId === member.id);
+        return relation && !relation.deleted;
+    });
 
     const fetchMembers = async () => {
         try {
-            // 1. 先获取项目成员关系
+            // 1. 获取项目成员关系
             const memberResponse = await axios.get<ProjectMemberRelation[]>(
                 `/api/projects/${projectId}/members`,
                 {
@@ -53,17 +61,9 @@ export const ProjectMembers: React.FC<ProjectMembersProps> = ({
                         'Content-Type': 'application/json',
                     },
                 }
-            ).catch(error => {
-                console.error('Error fetching members:', error);
-                console.error('Error details:', {
-                    status: error.response?.status,
-                    data: error.response?.data,
-                    config: error.config
-                });
-                throw error;
-            });
+            );
 
-            console.log('Members Response:', memberResponse.data);
+            setMemberRelations(memberResponse.data);
 
             // 2. 获取所有用户数据
             const usersResponse = await axios.get<UserInfo[]>('/api/users', {
@@ -71,28 +71,22 @@ export const ProjectMembers: React.FC<ProjectMembersProps> = ({
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 }
-            }).catch(error => {
-                console.error('Error fetching users:', error);
-                console.error('Error details:', error);
-                throw error;
             });
-
-            console.log('Users Response:', usersResponse.data);
 
             // 3. 匹配并筛选出项目成员的详细信息
             const memberDetails = memberResponse.data
-                .filter(member => !member.deleted)
+                .filter(member => !member.deleted)  // 只保留未删除的成员
                 .map(member => {
                     const userInfo = usersResponse.data.find(user => user.id === member.userId);
                     return userInfo;
                 })
                 .filter((userInfo): userInfo is UserInfo => userInfo !== undefined);
 
-            console.log('Member details:', memberDetails);
             setMembers(memberDetails);
         } catch (error) {
             console.error('Error in fetchMembers function:', error);
             setMembers([]);
+            setMemberRelations([]);
         }
     };
 
@@ -103,12 +97,13 @@ export const ProjectMembers: React.FC<ProjectMembersProps> = ({
     }, [projectId]);
 
     if (render) {
-        return <>{render(displayMembers)}</>;  // 使用 displayMembers 而不是 members
+        return <>{render(displayMembers)}</>;
     }
 
     return displayManagement ? (
         <MemberManagement
-            members={displayMembers?.filter(member => member && member.id)  // 使用 displayMembers
+            members={displayMembers
+                .filter(member => member && member.id)
                 .map(member => ({
                     id: String(member.id),
                     name: member.name || '',
@@ -117,4 +112,4 @@ export const ProjectMembers: React.FC<ProjectMembersProps> = ({
             onAddMember={fetchMembers}
         />
     ) : null;
-};
+}

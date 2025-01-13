@@ -18,6 +18,12 @@ interface Member {
     avatar?: string;
 }
 
+interface ProjectMemberRelation {
+    userId: number;
+    joinedAt: string;
+    deleted: boolean;
+}
+
 interface MemberManagementProps {
     members: Member[];
     onAddMember?: (member: Member) => void;
@@ -27,28 +33,48 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, onA
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const { id: projectId } = useParams(); // 获取项目ID
+    const { id: projectId } = useParams();
 
     const handleAddMember = async (values: { email: string }) => {
         try {
             setLoading(true);
 
-            // 获取所有用户信息
-            const response = await axios.get('/api/users', {
+            // 1. 获取所有用户信息
+            const usersResponse = await axios.get('/api/users', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 }
             });
 
             // 查找匹配的用户
-            const user = response.data.find((user: User) => user.email === values.email);
+            const user = usersResponse.data.find((user: User) => user.email === values.email);
 
             if (!user) {
                 message.error('This user not registered');
                 return;
             }
 
-            // 添加项目成员
+            // 2. 获取项目成员关系以检查成员状态
+            const membersResponse = await axios.get<ProjectMemberRelation[]>(
+                `/api/projects/${projectId}/members`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    }
+                }
+            );
+
+            // 检查用户是否已是活跃成员（未被删除）
+            const existingMember = membersResponse.data.find(
+                member => member.userId === user.id && !member.deleted
+            );
+
+            if (existingMember) {
+                message.error('User is already a member of this project');
+                return;
+            }
+
+            // 3. 添加项目成员
             await axios.post(`/api/projects/${projectId}/members/${user.id}`, {}, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -145,4 +171,4 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, onA
             </Modal>
         </div>
     );
-};
+}

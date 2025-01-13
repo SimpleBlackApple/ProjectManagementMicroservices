@@ -1,13 +1,14 @@
 package org.apache.dubbo.samples.seata.api.dto;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 @Data
 public class UserDTO implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -21,4 +22,3 @@ public class UserDTO implements Serializable {
     private String newToken;
     private Long expiresIn;
 }
-
