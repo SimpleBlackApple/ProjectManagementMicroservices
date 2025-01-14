@@ -10,34 +10,40 @@ export const authProvider: AuthProvider = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // 存储token和过期时间
         localStorage.setItem("token", data.token);
-        localStorage.setItem("tokenExpires", data.expiresIn);
         
-        // 获取用户信息
+        if (data.expiresIn) {
+          const expirationTime = Date.now() + data.expiresIn * 1000;
+          localStorage.setItem("tokenExpires", expirationTime.toString());
+        }
+
         const userResponse = await fetch(`/api/users/me`, {
           headers: {
             'Authorization': `Bearer ${data.token}`
           }
         });
-        const userData = await userResponse.json();
-        localStorage.setItem("user", JSON.stringify(userData));
-
-        return {
-          success: true,
-          redirectTo: "/projects",
-        };
+        
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          localStorage.setItem("user", JSON.stringify(userData));
+          
+          return {
+            success: true,
+            redirectTo: "/projects",
+          };
+        }
       }
 
       return {
         success: false,
         error: {
-          message: data.message,
+          message: data.message || "Invalid credentials",
           name: "Invalid credentials",
         },
       };
@@ -64,15 +70,37 @@ export const authProvider: AuthProvider = {
 
   check: async () => {
     const token = localStorage.getItem("token");
-    if (token) {
+    const tokenExpires = localStorage.getItem("tokenExpires");
+
+    if (!token) {
       return {
-        authenticated: true,
+        authenticated: false,
+        error: {
+          message: "Please login to continue",
+          name: "not authenticated",
+        },
+        redirectTo: "/login",
+      };
+    }
+
+    // Check token expiration
+    if (tokenExpires && Number(tokenExpires) < Date.now()) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("tokenExpires");
+      localStorage.removeItem("user");
+      
+      return {
+        authenticated: false,
+        error: {
+          message: "Session expired, please login again",
+          name: "session expired",
+        },
+        redirectTo: "/login",
       };
     }
 
     return {
-      authenticated: false,
-      redirectTo: "/login",
+      authenticated: true,
     };
   },
 
@@ -85,8 +113,18 @@ export const authProvider: AuthProvider = {
   },
 
   onError: async (error) => {
-    if (error.status === 401 || error.status === 403) {
+    const status = error?.status;
+    
+    if (status === 401 || status === 403) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("tokenExpires");
+      localStorage.removeItem("user");
+      
       return {
+        error: {
+          message: "Session expired, please login again",
+          name: "session expired",
+        },
         logout: true,
         redirectTo: "/login",
       };
@@ -94,4 +132,6 @@ export const authProvider: AuthProvider = {
 
     return { error };
   },
-}; 
+};
+
+export default authProvider;
