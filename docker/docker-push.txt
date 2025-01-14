@@ -3,7 +3,7 @@ docker tag project-service:1.0.0 heisepingguo/project-service:1.0.0
 docker tag task-service:1.0.0 heisepingguo/task-service:1.0.0
 docker tag user-service:1.0.0 heisepingguo/user-service:1.0.0
 
-docker push frontend:1.0.0
-docker push project-service:1.0.0
-docker push task-service:1.0.0
-docker push user-service:1.0.0
+docker push heisepingguo/frontend:1.0.0
+docker push heisepingguo/project-service:1.0.0
+docker push heisepingguo/task-service:1.0.0
+docker push heisepingguo/user-service:1.0.0

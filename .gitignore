@@ -10,3 +10,4 @@ seata-server
 .DS_Store
 .dockerignore
 dist
+docker.zip
