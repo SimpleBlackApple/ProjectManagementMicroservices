@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 const { Text, Link } = Typography;
 
 const authCredentials = {
-  email: "firstuser@example.com",
-  password: "123456",
+  email: "engineer@outlook.com",
+  password: "Aa123456",
 };
 
 export const LoginPage = () => {
@@ -26,8 +26,8 @@ export const LoginPage = () => {
         return (
           <div>
             {content}
-            <div style={{ 
-              marginTop: "24px", 
+            <div style={{
+              marginTop: "24px",
               textAlign: "center",
               display: "flex",
               justifyContent: "center",

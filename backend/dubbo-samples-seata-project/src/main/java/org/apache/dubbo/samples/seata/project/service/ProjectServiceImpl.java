@@ -73,7 +73,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.addMember(owner);
 
         project = projectRepository.save(project);
-        return convertToProjectDTO(project);
+        return convertToProjectDTO(project, owner.getOriginId());
     }
 
     @Override
@@ -82,9 +82,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
         validateMembership(projectId, email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         BeanCopyUtils.copyNonNullProperties(updateBody, project);
-        return convertToProjectDTO(projectRepository.save(project));
+        return convertToProjectDTO(projectRepository.save(project), user.getOriginId());
     }
 
     @Override
@@ -119,7 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return projectRepository.findByOwnerId(user.getId())
                 .stream()
-                .map(this::convertToProjectDTO)
+                .map(project -> convertToProjectDTO(project, user.getOriginId()))
                 .collect(Collectors.toList());
     }
 
@@ -135,7 +137,10 @@ public class ProjectServiceImpl implements ProjectService {
         return memberProjects.stream()
                 .map(ProjectMember::getProject)
                 .distinct()
-                .map(this::convertToProjectDTO)
+                .map(project -> {
+                    User owner = project.getOwner();
+                    return convertToProjectDTO(project, owner.getOriginId());
+                })
                 .collect(Collectors.toList());
     }
 
@@ -183,7 +188,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectMemberRepository.save(newMember);
 
-        ProjectDTO projectDTO = convertToProjectDTO(project);
+        ProjectDTO projectDTO = convertToProjectDTO(project, project.getOwner().getOriginId());
         MemberDTO memberDTO = new MemberDTO();
         memberDTO.setUserId(newUserId);  // 使用原始 newUserId
         memberDTO.setJoinedAt(newMember.getJoinedAt());
@@ -230,7 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(pm -> {
                     MemberDTO dto = new MemberDTO();
                     // 直接从 ProjectMember 中获取用户 ID
-                    dto.setUserId(pm.getUser().getId());
+                    dto.setUserId(pm.getUser().getOriginId());
                     dto.setJoinedAt(pm.getJoinedAt());
                     dto.setDeleted(pm.isDeleted());
                     return dto;
@@ -246,7 +251,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         validateMembership(projectId, email);
 
-        return convertToProjectDTO(project);
+        return convertToProjectDTO(project, project.getOwner().getOriginId());
     }
 
     @Override
@@ -331,6 +336,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 创建完整用户对象
         User user = User.builder()
                 .id(userId)
+                .originId(userId)
                 .name(name)
                 .email(email)
                 .password(password)
@@ -393,7 +399,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.setOwner(newOwner);
 
         project = projectRepository.save(project);
-        return convertToProjectDTO(project);
+        return convertToProjectDTO(project, newOwner.getOriginId());
     }
 
     @Override
@@ -411,10 +417,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-    private ProjectDTO convertToProjectDTO(Project project) {
+    private ProjectDTO convertToProjectDTO(Project project, Integer originId) {
         ProjectDTO dto = new ProjectDTO();
         BeanUtils.copyProperties(project, dto);
-        dto.setOwnerId(project.getOwner().getId());
+        dto.setOwnerId(originId);
 
         // 初始化空列表，避免NPE
         dto.setMembers(new ArrayList<>());

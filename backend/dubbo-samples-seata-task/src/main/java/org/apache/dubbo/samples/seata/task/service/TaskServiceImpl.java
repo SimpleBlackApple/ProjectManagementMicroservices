@@ -190,7 +190,7 @@ public class TaskServiceImpl implements TaskService {
                 System.out.println("Input managerId: " + createBody.getManagerId());
 
                 // 直接通过ID查找用户
-                User member = userRepository.findById(createBody.getManagerId())
+                User member = userRepository.findByOriginId(createBody.getManagerId())
                         .orElseThrow(() -> new RuntimeException("Member not found with ID: " + createBody.getManagerId()));
 
                 // 验证用户是否为项目成员
@@ -237,7 +237,7 @@ public class TaskServiceImpl implements TaskService {
 
         // 更新负责人
         if (updateBody.getManagerId() != null) {
-            User member = userRepository.findById(updateBody.getManagerId())
+            User member = userRepository.findByOriginId(updateBody.getManagerId())
                     .orElseThrow(() -> new RuntimeException("Member not found with ID: " + updateBody.getManagerId()));
 
             // 验证用户是否为项目成员
@@ -369,7 +369,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setType(task.getType());
         dto.setStatus(task.getStatus());
         dto.setProjectId(task.getProjectId());
-        dto.setManagerId(task.getMember().getId());
+        dto.setManagerId(task.getMember().getOriginId());
         dto.setStoryPoints(task.getStoryPoints());
         dto.setStartDate(task.getStartDate());
         dto.setDueDate(task.getDueDate());
@@ -407,6 +407,7 @@ public class TaskServiceImpl implements TaskService {
         // 创建完整用户对象
         User user = User.builder()
                 .id(userId)
+                .originId(userId)
                 .name(name)
                 .email(email)
                 .password(password)

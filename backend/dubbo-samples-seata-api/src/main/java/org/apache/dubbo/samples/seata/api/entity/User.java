@@ -20,6 +20,8 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    private Integer originId;
     
     @Column(nullable = false)
     private String name;
