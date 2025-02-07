@@ -1,12 +1,8 @@
 import React from "react";
-
-import { useGetIdentity } from "@refinedev/core";
-
-import { SettingOutlined } from "@ant-design/icons";
-import { Button, Popover } from "antd";
-
+import { useGetIdentity, useLogout } from "@refinedev/core";
+import { SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Popover, Menu } from "antd"; // 改用 Menu
 import type { User } from "@/graphql/schema.types";
-
 import { CustomAvatar } from "../../../pages/tasks/components/member/avatar";
 import { Text } from "../../text";
 import { AccountSettings } from "../account-settings";
@@ -14,41 +10,34 @@ import { AccountSettings } from "../account-settings";
 export const CurrentUser = () => {
   const [opened, setOpened] = React.useState(false);
   const { data: user } = useGetIdentity<User>();
+  const { mutate: logout } = useLogout();
 
   const content = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Text
-        strong
-        style={{
-          padding: "12px 20px",
-        }}
-      >
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <Text strong style={{ padding: "12px 20px" }}>
         {user?.name}
       </Text>
-      <div
+      <Menu
+        mode="vertical"
         style={{
+          border: "none",
           borderTop: "1px solid #d9d9d9",
-          padding: "4px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
         }}
-      >
-        <Button
-          style={{ textAlign: "left" }}
-          icon={<SettingOutlined />}
-          type="text"
-          block
-          onClick={() => setOpened(true)}
-        >
-          Account settings
-        </Button>
-      </div>
+        items={[
+          {
+            key: "settings",
+            icon: <SettingOutlined />,
+            label: "Account settings",
+            onClick: () => setOpened(true),
+          },
+          {
+            key: "logout",
+            icon: <LogoutOutlined />,
+            label: "Logout",
+            onClick: () => logout(),
+          },
+        ]}
+      />
     </div>
   );
 
