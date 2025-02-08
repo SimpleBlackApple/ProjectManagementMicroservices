@@ -19,7 +19,7 @@ export const authProvider: AuthProvider = {
         localStorage.setItem("token", data.token);
         
         if (data.expiresIn) {
-          const expirationTime = Date.now() + data.expiresIn * 1000;
+          const expirationTime = Date.now() + data.expiresIn;
           localStorage.setItem("tokenExpires", expirationTime.toString());
         }
 
