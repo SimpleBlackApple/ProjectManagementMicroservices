@@ -1,54 +1,114 @@
 .taskBoard {
-    padding: 24px;
-  
-    &-container {
-      width: 100%;
+  padding: 24px;
+
+  &-container {
+    width: 100%;
+  }
+
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    &-title {
+      margin: 0;
     }
-  
+  }
+
+  &-sprint {
+    margin-bottom: 16px;
+    background: #fff;
+    border-radius: 4px;
+    padding: 16px;
+
+    &-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 16px;
+
+      .sprint-name {
+        margin-right: 8px;
+      }
+
+      .sprint-number {
+        flex: none; /* 防止弹性布局改变元素尺寸 */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px; /* 使用最小宽度确保内容不会挤压 */
+        width: 20px;
+        height: 20px;
+        background: #52c41a;
+        border-radius: 50%;
+        color: white;
+        font-size: 12px;
+        line-height: 1;
+        padding: 0; /* 移除内边距避免影响形状 */
+        transform-origin: center; /* 确保变形时保持居中 */
+        aspect-ratio: 1; /* 强制保持 1:1 的宽高比 */
+      }
+
+      .points-tag {
+        margin: 0;
+        padding: 2px 8px;
+        border-radius: 12px;
+      }
+    }
+
     &-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
-  
-      &-title {
-        margin: 0;
+      margin-bottom: 16px;
+
+      .date-info {
+        color: #8c8c8c;
+        font-size: 14px;
       }
     }
-  
+
+    &-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+  }
+}
+
+/* 手机端适配 */
+@media screen and (max-width: 768px) {
+  .taskBoard {
+    padding: 16px;
+
     &-sprint {
-      width: 100%;
-      margin-bottom: 16px;
-      position: relative;
-  
-      &-wrapper {
-        position: relative;
-      }
-      &-backlog {
-        
-        position: absolute;
-        right: 65px;
-      }
-      &-header {
-        position: absolute;
-        top: 16px;  // 向上移动按钮
-        right: 20px;
-        z-index: 1;
-  
-        &-actions {
-          display: flex;
-          gap: 10px;
-          align-items: center;
+      &-title {
+        .sprint-number {
+          /* 在手机端保持相同的尺寸和形状 */
+          flex-shrink: 0;
+          width: 20px !important;
+          height: 20px !important;
+          min-width: 20px !important;
         }
       }
-    }
-  
-    &-backlog {
+
       &-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      &-info {
+        flex-wrap: wrap;
+      }
+
+      &-actions {
         width: 100%;
+        justify-content: flex-end;
       }
     }
   }
+}

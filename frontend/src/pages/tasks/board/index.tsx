@@ -22,7 +22,7 @@ interface TaskBoardPageProps {
 }
 
 export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
-  const { id: projectId } = useParams();
+  const {id: projectId} = useParams();
   const navigate = useNavigate();
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [sprintTasks, setSprintTasks] = useState<Record<number, Task[]>>({});
@@ -31,7 +31,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  const { data: projectData, isLoading: isProjectLoading, isError } = useOne<Project>({
+  const {data: projectData, isLoading: isProjectLoading, isError} = useOne<Project>({
     resource: "projects",
     id: projectId as string,
   });
@@ -105,7 +105,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
   }, [projectId]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
+    const {active, over} = event;
     if (!over || active.id === over.id) return;
 
     const task = active.data.current as Task;
@@ -146,9 +146,10 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
             content: (
               <div>
                 <p>This action will affect the sprint scope</p>
-                <p><strong>{task.title}</strong> will be moved from sprint <strong>{sourceSprint?.name}</strong> to sprint <strong>{targetSprint.name}</strong>.</p>
+                <p><strong>{task.title}</strong> will be moved from sprint <strong>{sourceSprint?.name}</strong> to
+                  sprint <strong>{targetSprint.name}</strong>.</p>
                 {(newStartDate !== task.startDate || newDueDate !== task.dueDate) && (
-                  <p style={{ color: '#ff4d4f' }}>
+                  <p style={{color: '#ff4d4f'}}>
                     Task duration will be adjusted to fit within sprint timeline.
                   </p>
                 )}
@@ -207,7 +208,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         // 如果移动到 backlog，只更新 sprintId
         await axios.put(
           `/api/tasks/${taskId}`,
-          { sprintId: newSprintId },
+          {sprintId: newSprintId},
           {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -272,7 +273,7 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
           content: (
             <div>
               <p>Failed to update sprint status</p>
-              <p style={{ color: '#ff4d4f' }}>{error.response.data}</p>
+              <p style={{color: '#ff4d4f'}}>{error.response.data}</p>
             </div>
           )
         });
@@ -291,41 +292,41 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
         return {
           type: 'default' as const,
           children: 'Start Sprint',
-          icon: <PlayCircleOutlined />,
+          icon: <PlayCircleOutlined/>,
           title: 'Click to start the sprint'
         };
       case 'IN_PROGRESS':
         return {
           type: 'primary' as const,
           children: 'Started',
-          style: { backgroundColor: '#52c41a', borderColor: '#52c41a' },
-          icon: <PlayCircleOutlined />,
+          style: {backgroundColor: '#52c41a', borderColor: '#52c41a'},
+          icon: <PlayCircleOutlined/>,
           title: 'Click to mark as done'
         };
       case 'DONE':
         return {
           type: 'primary' as const,
           children: 'Done',
-          style: { backgroundColor: '#1890ff', borderColor: '#1890ff' },
-          icon: <PlayCircleOutlined />,
+          style: {backgroundColor: '#1890ff', borderColor: '#1890ff'},
+          icon: <PlayCircleOutlined/>,
           title: 'Click to restart sprint'
         };
       default:
         return {
           type: 'default' as const,
           children: 'Start Sprint',
-          icon: <PlayCircleOutlined />,
+          icon: <PlayCircleOutlined/>,
           title: 'Click to start the sprint'
         };
     }
   };
 
   if (loading || isProjectLoading) {
-    return <Spin spinning={true} />;
+    return <Spin spinning={true}/>;
   }
 
   if (isError) {
-    return <Alert type="error" message="Error loading project data" />;
+    return <Alert type="error" message="Error loading project data"/>;
   }
 
   const calculateSprintPoints = (sprintId: number) => {
@@ -335,98 +336,90 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       .filter(task => task.status === 'DONE')
       .reduce((sum, task) => sum + (task.storyPoints || 0), 0);
 
-    return { totalPoints, completedPoints };
+    return {totalPoints, completedPoints};
   };
 
   return (
-    <div>
-      <div className="taskBoard">
-        <Space direction="vertical" size="large" className="taskBoard-container">
-          <div className="taskBoard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <h1 className="taskBoard-header-title" style={{ margin: 0 }}>
-                {projectData?.data?.name} - Sprint Board
-              </h1>
-              <ProjectMembers projectId={projectId as string} />
-            </div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setIsCreateModalVisible(true)
-              }}
-              size="small"
-            >
-              Create Sprint
-            </Button>
+    <div className="taskBoard">
+      <Space direction="vertical" size="large" className="taskBoard-container">
+        <div className="taskBoard-header">
+          <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+            <h1 className="taskBoard-header-title">
+              {projectData?.data?.name} - Sprint Board
+            </h1>
+            <ProjectMembers projectId={projectId as string}/>
           </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined/>}
+            onClick={() => setIsCreateModalVisible(true)}
+            size="small"
+          >
+            Create Sprint
+          </Button>
+        </div>
 
-          <KanbanBoard onDragEnd={handleDragEnd}>
-            {[...sprints]
-              .sort((a, b) => a.id - b.id)
-              .map((sprint: Sprint, index: number) => (
-                <div key={`sprint-wrapper-${sprint.id}`} className="taskBoard-sprint-wrapper">
-                  <div className="taskBoard-sprint-header">
-                    <div className="taskBoard-sprint-header-actions">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Tag color="green">
-                          {calculateSprintPoints(sprint.id).completedPoints}/{calculateSprintPoints(sprint.id).totalPoints} pts
-                        </Tag>
-                        <div style={{ fontSize: '12px', color: '#888' }}>
-                          {sprint.startDate ? `Start: ${dayjs(sprint.startDate).format('YYYY-MM-DD')}` : '-'}
-                          {' | '}
-                          {sprint.endDate ? `Due: ${dayjs(sprint.endDate).format('YYYY-MM-DD')}` : '-'}
-                        </div>
-                        <Button
-                          type="text"
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            setEditingSprint(sprint);
-                            setIsEditModalVisible(true);
-                          }}
-                        />
-                        <Tooltip title={getSprintButtonProps(sprint).title}>
-                          <Button
-                            {...getSprintButtonProps(sprint)}
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartSprint(sprint);
-                            }}
-                          />
-                        </Tooltip>
-                        <DeleteSprintButton
-                          sprintId={sprint.id}
-                          onDeleteSuccess={fetchData}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <KanbanColumn
-                    showAddButton={false}
-                    key={`sprint-${sprint.id}`}
-                    id={`sprint-${sprint.id}`}
-                    title={(
-                      <div>
-                        {index + 1} . {sprint.name}
-                      </div>
-                    )}
-                    count={sprintTasks[sprint.id]?.length || 0}
-                  >
-                    {sprintTasks[sprint.id]?.map((task) => (
-                      <KanbanItem
-                        key={task.id!}
-                        id={task.id!.toString()}
-                        data={task}
-                      >
-                        <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
-                      </KanbanItem>
-                    ))}
-                  </KanbanColumn>
-                  <br />
+        <KanbanBoard onDragEnd={handleDragEnd}>
+          {sprints.map((sprint: Sprint, index: number) => (
+            <div key={`sprint-${sprint.id}`} className="taskBoard-sprint">
+              <div className="taskBoard-sprint-header">
+                <div className="taskBoard-sprint-title">
+                  <span className="sprint-title">
+          {`${index + 1}. ${sprint.name}`}
+        </span>
+                  <span className="sprint-number">{sprintTasks[sprint.id]?.length || 0}</span>
+                  <Tag color="success" className="points-tag">
+                    {calculateSprintPoints(sprint.id).completedPoints}/
+                    {calculateSprintPoints(sprint.id).totalPoints} pts
+                  </Tag>
+                  <span className="date-info">
+          Start: {dayjs(sprint.startDate).format('YYYY-MM-DD')} |
+          Due: {dayjs(sprint.endDate).format('YYYY-MM-DD')}
+        </span>
                 </div>
-              ))}
+                <div className="taskBoard-sprint-actions">
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={() => {
+                      setEditingSprint(sprint);
+                      setIsEditModalVisible(true);
+                    }}
+                    size="small"
+                  />
+                  <Tooltip title={getSprintButtonProps(sprint).title}>
+                    <Button
+                      {...getSprintButtonProps(sprint)}
+                      size="small"
+                      onClick={() => handleStartSprint(sprint)}
+                    />
+                  </Tooltip>
+                  <DeleteSprintButton
+                    sprintId={sprint.id}
+                    onDeleteSuccess={fetchData}
+                  />
+                </div>
+              </div>
 
+              <KanbanColumn
+                id={`sprint-${sprint.id}`}
+                title=""
+                count={0} // 设置为 0 以隐藏重复的数量显示
+                showAddButton={false}
+              >
+                {sprintTasks[sprint.id]?.map((task) => (
+                  <KanbanItem
+                    key={task.id!}
+                    id={task.id!.toString()}
+                    data={task}
+                  >
+                    <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
+                  </KanbanItem>
+                ))}
+              </KanbanColumn>
+            </div>
+          ))}
+          <div className="taskBoard-sprint">
             <KanbanColumn
               id="backlog"
               title="Backlog"
@@ -439,13 +432,13 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
                   id={task.id!.toString()}
                   data={task}
                 >
-                  <TaskCardMemo {...task} sprintId={task.sprintId ?? null} />
+                  <TaskCardMemo {...task} sprintId={task.sprintId ?? null}/>
                 </KanbanItem>
               ))}
             </KanbanColumn>
-          </KanbanBoard>
-        </Space>
-      </div>
+          </div>
+        </KanbanBoard>
+      </Space>
 
       <SprintEditModal
         visible={isEditModalVisible}
@@ -458,12 +451,9 @@ export const TaskBoardPage: React.FC<TaskBoardPageProps> = ({ children }) => {
       />
       <SprintCreateModal
         visible={isCreateModalVisible}
-        onClose={() => {
-          setIsCreateModalVisible(false);
-        }}
+        onClose={() => setIsCreateModalVisible(false)}
         onSuccess={fetchData}
       />
-      {children}
     </div>
   );
 };
